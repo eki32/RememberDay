@@ -1,0 +1,120 @@
+<main class="min-h-screen bg-stone-50">
+  @if (cargando) {
+    <div class="min-h-screen flex items-center justify-center">
+      <p class="text-stone-500">Cargando galería…</p>
+    </div>
+  } @else if (!evento) {
+    <div class="min-h-screen flex items-center justify-center">
+      <p class="text-stone-600">Evento no encontrado.</p>
+    </div>
+  } @else {
+    <!-- Cabecera fija arriba -->
+    <header class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-stone-200">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        <div>
+          <h1 class="font-serif text-lg sm:text-xl text-stone-900">{{ evento.titulo }}</h1>
+          <p class="text-xs text-stone-500">{{ totalFotos }} fotos · {{ totalVideos }} vídeos</p>
+        </div>
+        <div class="flex items-center gap-3">
+          @if (nombreInvitado) {
+            <span class="hidden sm:block text-sm text-stone-600">{{ nombreInvitado }}</span>
+          }
+          <div
+            class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-800"
+          >
+            {{ iniciales }}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido -->
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+      @if (fotos.length === 0) {
+        <div class="text-center py-20">
+          <div class="text-6xl mb-4 opacity-30">📷</div>
+          <p class="text-stone-600 font-medium mb-1">Aún no hay fotos</p>
+          <p class="text-stone-500 text-sm">¡Sé el primero en subir una!</p>
+        </div>
+      } @else {
+        <!-- Grid responsive: 3 cols en móvil, hasta 6 en escritorio -->
+        <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
+          @for (foto of fotos; track foto.id) {
+            <div class="aspect-square bg-stone-100 rounded-lg relative overflow-hidden group">
+              @if (foto.tipo === 'foto') {
+                <img
+                  [src]="foto.url"
+                  [alt]="foto.nombre_invitado ?? 'Foto del evento'"
+                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                />
+              } @else {
+                <video
+                  [src]="foto.url"
+                  class="w-full h-full object-cover"
+                  muted
+                  playsinline
+                ></video>
+                <div class="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <div class="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
+                    <span class="text-stone-900 ml-0.5">▶</span>
+                  </div>
+                </div>
+              }
+              <!-- Botón de borrar (solo si la subí yo y hace <5 min) -->
+              @if (puedoBorrar(foto)) {
+                <button
+                  (click)="borrarFoto(foto, $event)"
+                  [disabled]="borrandoIds.has(foto.id)"
+                  class="absolute top-1 right-1 w-7 h-7 rounded-full bg-white/90 hover:bg-red-500 hover:text-white flex items-center justify-center text-stone-700 shadow-md transition opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                  aria-label="Borrar foto"
+                >
+                  @if (borrandoIds.has(foto.id)) {
+                    <span class="text-xs">…</span>
+                  } @else {
+                    <span class="text-sm leading-none">×</span>
+                  }
+                </button>
+              }
+              @if (foto.nombre_invitado) {
+                <div
+                  class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <p class="text-white text-[10px] sm:text-xs truncate">
+                    {{ foto.nombre_invitado }}
+                  </p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Botón flotante de subir (siempre visible, abajo) -->
+    <div
+      class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-stone-50 via-stone-50 to-transparent pt-12 pb-4 px-4 pointer-events-none"
+    >
+      <div class="max-w-md mx-auto pointer-events-auto">
+        @if (subiendo) {
+          <div class="bg-stone-900 text-white py-3 rounded-full text-center font-medium shadow-lg">
+            Subiendo {{ progresoSubida.hechas }} / {{ progresoSubida.total }}…
+          </div>
+        } @else {
+          <label
+            class="block bg-stone-900 text-white py-3 rounded-full font-medium hover:bg-stone-800 transition shadow-lg cursor-pointer text-center"
+          >
+            <span class="text-xl leading-none mr-1">+</span> Subir fotos / vídeos
+            <input
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              class="hidden"
+              (change)="onArchivosSeleccionados($event)"
+            />
+          </label>
+        }
+      </div>
+    </div>
+  }
+</main>

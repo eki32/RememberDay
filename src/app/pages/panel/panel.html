@@ -1,0 +1,82 @@
+<main class="min-h-screen bg-stone-50">
+  <header class="bg-white border-b border-stone-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <div>
+        <p class="text-xs uppercase tracking-widest text-stone-400">RememberDay</p>
+        <h1 class="text-xl font-serif text-stone-900">Mis eventos</h1>
+      </div>
+      <button (click)="cerrarSesion()" class="text-sm text-stone-600 hover:text-stone-900 transition">
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <div class="flex justify-between items-center mb-6">
+      <p class="text-sm text-stone-600">
+        @if (cargando) {
+          Cargando…
+        } @else {
+          {{ eventos.length }} {{ eventos.length === 1 ? 'evento' : 'eventos' }}
+        }
+      </p>
+      <button (click)="abrirFormulario()" class="bg-stone-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-stone-800 transition text-sm">
+        + Nuevo evento
+      </button>
+    </div>
+
+    @if (!cargando && eventos.length === 0) {
+      <div class="text-center py-20 bg-white rounded-2xl border border-stone-200">
+        <div class="text-5xl mb-4 opacity-30">🎉</div>
+        <p class="text-stone-700 font-medium mb-1">Aún no tienes eventos</p>
+        <p class="text-stone-500 text-sm mb-6">Crea tu primer evento para empezar a recopilar recuerdos.</p>
+        <button (click)="abrirFormulario()" class="bg-stone-900 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-stone-800 transition">
+          Crear mi primer evento
+        </button>
+      </div>
+    }
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (evento of eventos; track evento.id) {
+        <a [routerLink]="['/panel/evento', evento.id]" class="bg-white rounded-2xl border border-stone-200 p-5 hover:border-stone-400 transition group block">
+          <h2 class="font-serif text-xl text-stone-900 mb-1 group-hover:text-stone-700">{{ evento.titulo }}</h2>
+          <p class="text-sm text-stone-500 mb-3">{{ evento.fecha }} · {{ evento.lugar }}</p>
+          <p class="text-xs text-stone-400 font-mono">/{{ evento.slug }}</p>
+        </a>
+      }
+    </div>
+  </div>
+
+  @if (mostrandoFormulario) {
+    <div class="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-20" (click)="cerrarFormulario()">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8" (click)="$event.stopPropagation()">
+        <h2 class="text-2xl font-serif text-stone-900 mb-1">Nuevo evento</h2>
+        <p class="text-sm text-stone-500 mb-6">Rellena los datos del evento.</p>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Título</label>
+            <input type="text" [(ngModel)]="nuevoTitulo" placeholder="Ej: Boda de Bryan y Eider" class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Fecha</label>
+            <input type="text" [(ngModel)]="nuevaFecha" placeholder="Ej: 1 de agosto" class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">Lugar</label>
+            <input type="text" [(ngModel)]="nuevoLugar" placeholder="Ej: Mogro" class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button (click)="cerrarFormulario()" class="flex-1 px-4 py-3 border border-stone-300 text-stone-700 rounded-xl hover:bg-stone-50 transition">
+            Cancelar
+          </button>
+          <button (click)="crearEvento()" [disabled]="creando || !nuevoTitulo.trim()" class="flex-1 bg-stone-900 text-white px-4 py-3 rounded-xl font-medium hover:bg-stone-800 transition disabled:opacity-50">
+            {{ creando ? 'Creando…' : 'Crear evento' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</main>
