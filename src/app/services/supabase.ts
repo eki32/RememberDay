@@ -25,6 +25,20 @@ export interface Foto {
   subido_por_dispositivo: string | null; // 👈 NUEVO
 }
 
+export interface Solicitud {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string | null;
+  tipo_evento: string;
+  fecha_evento: string | null;
+  mensaje: string | null;
+  estado: 'pendiente' | 'contactado' | 'pagado' | 'cuenta_creada' | 'rechazado';
+  notas_admin: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -443,5 +457,108 @@ export class SupabaseService {
     }
 
     return { ok: true };
+  }
+
+  // ============================================
+  // SOLICITUDES (acceso a la plataforma)
+  // ============================================
+
+  /**
+   * Crear una solicitud de acceso (público, sin auth).
+   */
+  async crearSolicitud(datos: {
+    nombre: string;
+    email: string;
+    telefono: string | null;
+    tipo_evento: string;
+    fecha_evento: string | null;
+    mensaje: string | null;
+  }): Promise<boolean> {
+    const { error } = await this.supabase
+      .from('solicitudes')
+      .insert(datos);
+
+    if (error) {
+      console.error('Error al crear solicitud:', error);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Comprueba si el usuario actual es admin.
+   * Devuelve false si no hay sesión o si is_admin es false.
+   */
+  async esAdmin(): Promise<boolean> {
+    const usuario = await this.getUsuarioActual();
+    if (!usuario) return false;
+
+    const { data, error } = await this.supabase
+      .from('perfiles')
+      .select('is_admin')
+      .eq('id', usuario.id)
+      .maybeSingle();
+
+    if (error || !data) {
+      console.error('Error al comprobar admin:', error);
+      return false;
+    }
+
+    return data.is_admin === true;
+  }
+
+  /**
+   * Listar todas las solicitudes (solo admins por RLS).
+   * Más recientes primero.
+   */
+  async getSolicitudes(): Promise<Solicitud[]> {
+    const { data, error } = await this.supabase
+      .from('solicitudes')
+      .select('*')
+      .order('creado_en', { ascending: false });
+
+    if (error) {
+      console.error('Error al cargar solicitudes:', error);
+      return [];
+    }
+    return data ?? [];
+  }
+
+  /**
+   * Cambiar el estado de una solicitud.
+   */
+  async actualizarEstadoSolicitud(
+    id: string,
+    estado: Solicitud['estado']
+  ): Promise<boolean> {
+    const { error } = await this.supabase
+      .from('solicitudes')
+      .update({ estado, actualizado_en: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error al actualizar estado:', error);
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Guardar notas del admin para una solicitud.
+   */
+  async guardarNotasSolicitud(id: string, notas: string): Promise<boolean> {
+    const { error } = await this.supabase
+      .from('solicitudes')
+      .update({
+        notas_admin: notas,
+        actualizado_en: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error al guardar notas:', error);
+      return false;
+    }
+    return true;
   }
 }

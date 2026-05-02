@@ -35,3 +35,28 @@ export const guestGuard: CanActivateFn = async () => {
   router.navigate(['/panel']);
   return false; // hay sesión → bloquea
 };
+
+/**
+ * Guard para rutas de administración.
+ * Si no hay sesión → /login.
+ * Si hay sesión pero no es admin → /panel (acceso denegado silenciosamente).
+ */
+export const adminGuard: CanActivateFn = async () => {
+  const supabase = inject(SupabaseService);
+  const router = inject(Router);
+
+  const usuario = await supabase.getUsuarioActual();
+  if (!usuario) {
+    router.navigate(['/login']);
+    return false;
+  }
+
+  const esAdmin = await supabase.esAdmin();
+  if (!esAdmin) {
+    // No es admin: lo mandamos al panel normal sin armar escándalo
+    router.navigate(['/panel']);
+    return false;
+  }
+
+  return true;
+};

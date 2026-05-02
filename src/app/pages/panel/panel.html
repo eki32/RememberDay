@@ -1,15 +1,22 @@
 <main class="min-h-screen bg-stone-50">
-  <header class="bg-white border-b border-stone-200">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-      <div>
-        <p class="text-xs uppercase tracking-widest text-stone-400">RememberDay</p>
-        <h1 class="text-xl font-serif text-stone-900">Mis eventos</h1>
-      </div>
+<header class="bg-white border-b border-stone-200">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+    <div>
+      <p class="text-xs uppercase tracking-widest text-stone-400">RememberDay</p>
+      <h1 class="text-xl font-serif text-stone-900">Mis eventos</h1>
+    </div>
+    <div class="flex items-center gap-4">
+      @if (esAdmin) {
+        <a routerLink="/admin/solicitudes" class="text-sm text-stone-600 hover:text-stone-900 transition">
+          Admin
+        </a>
+      }
       <button (click)="cerrarSesion()" class="text-sm text-stone-600 hover:text-stone-900 transition">
         Cerrar sesión
       </button>
     </div>
-  </header>
+  </div>
+</header>
 
   <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
     <div class="flex justify-between items-center mb-6">

@@ -1,0 +1,157 @@
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { SupabaseService, Solicitud } from '../../services/supabase';
+
+@Component({
+  selector: 'app-admin-solicitudes',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './admin-solicitudes.html',
+})
+export class AdminSolicitudesComponent implements OnInit {
+  private supabase = inject(SupabaseService);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+
+  solicitudes: Solicitud[] = [];
+  cargando = true;
+  filtroEstado: string = 'todos';
+
+  // Solicitud seleccionada para ver detalle
+  seleccionada: Solicitud | null = null;
+  notasEdit = '';
+  guardandoNotas = false;
+
+  estados: { valor: Solicitud['estado']; etiqueta: string; color: string }[] = [
+    { valor: 'pendiente', etiqueta: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
+    { valor: 'contactado', etiqueta: 'Contactado', color: 'bg-blue-100 text-blue-800' },
+    { valor: 'pagado', etiqueta: 'Pagado', color: 'bg-purple-100 text-purple-800' },
+    { valor: 'cuenta_creada', etiqueta: 'Cuenta creada', color: 'bg-green-100 text-green-800' },
+    { valor: 'rechazado', etiqueta: 'Rechazado', color: 'bg-red-100 text-red-800' },
+  ];
+
+  tiposEvento: Record<string, string> = {
+    boda: 'Boda',
+    cumpleanos: 'Cumpleaños',
+    empresa: 'Evento de empresa',
+    comunion: 'Comunión / Bautizo',
+    otro: 'Otro',
+  };
+
+  async ngOnInit() {
+    await this.cargar();
+  }
+
+  async cargar() {
+    this.cargando = true;
+    this.cdr.detectChanges();
+    this.solicitudes = await this.supabase.getSolicitudes();
+    this.cargando = false;
+    this.cdr.detectChanges();
+  }
+
+  get solicitudesFiltradas(): Solicitud[] {
+    if (this.filtroEstado === 'todos') return this.solicitudes;
+    return this.solicitudes.filter((s) => s.estado === this.filtroEstado);
+  }
+
+  get contadorPorEstado(): Record<string, number> {
+    const conteo: Record<string, number> = { todos: this.solicitudes.length };
+    for (const estado of this.estados) {
+      conteo[estado.valor] = this.solicitudes.filter(
+        (s) => s.estado === estado.valor
+      ).length;
+    }
+    return conteo;
+  }
+
+  estiloEstado(valor: string): string {
+    return this.estados.find((e) => e.valor === valor)?.color ?? 'bg-stone-100 text-stone-800';
+  }
+
+  etiquetaEstado(valor: string): string {
+    return this.estados.find((e) => e.valor === valor)?.etiqueta ?? valor;
+  }
+
+  etiquetaTipoEvento(valor: string): string {
+    return this.tiposEvento[valor] ?? valor;
+  }
+
+  abrirDetalle(solicitud: Solicitud) {
+    this.seleccionada = solicitud;
+    this.notasEdit = solicitud.notas_admin ?? '';
+  }
+
+  cerrarDetalle() {
+    this.seleccionada = null;
+    this.notasEdit = '';
+  }
+
+  async cambiarEstado(nuevoEstado: Solicitud['estado']) {
+    if (!this.seleccionada) return;
+
+    const ok = await this.supabase.actualizarEstadoSolicitud(
+      this.seleccionada.id,
+      nuevoEstado
+    );
+
+    if (ok) {
+      this.seleccionada.estado = nuevoEstado;
+      // Actualizar también en la lista
+      const idx = this.solicitudes.findIndex((s) => s.id === this.seleccionada!.id);
+      if (idx !== -1) this.solicitudes[idx].estado = nuevoEstado;
+      this.cdr.detectChanges();
+    } else {
+      alert('No se pudo cambiar el estado.');
+    }
+  }
+
+  async guardarNotas() {
+    if (!this.seleccionada) return;
+
+    this.guardandoNotas = true;
+    this.cdr.detectChanges();
+
+    const ok = await this.supabase.guardarNotasSolicitud(
+      this.seleccionada.id,
+      this.notasEdit
+    );
+
+    if (ok) {
+      this.seleccionada.notas_admin = this.notasEdit;
+      const idx = this.solicitudes.findIndex((s) => s.id === this.seleccionada!.id);
+      if (idx !== -1) this.solicitudes[idx].notas_admin = this.notasEdit;
+    } else {
+      alert('No se pudieron guardar las notas.');
+    }
+
+    this.guardandoNotas = false;
+    this.cdr.detectChanges();
+  }
+
+  async cerrarSesion() {
+    await this.supabase.cerrarSesion();
+    this.router.navigate(['/login']);
+  }
+
+  formatearFecha(fecha: string | null): string {
+    if (!fecha) return '—';
+    return new Date(fecha).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  formatearFechaCompleta(fecha: string): string {
+    return new Date(fecha).toLocaleString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+}

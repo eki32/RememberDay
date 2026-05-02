@@ -23,9 +23,10 @@ export class PanelComponent implements OnInit {
   nuevoTitulo = '';
   nuevaFecha = '';
   nuevoLugar = '';
+  esAdmin = false;
 
   async ngOnInit() {
-    // Ya no comprobamos sesión — lo hace authGuard
+    this.esAdmin = await this.supabase.esAdmin();
     await this.cargarEventos();
   }
 
@@ -74,4 +75,6 @@ export class PanelComponent implements OnInit {
     await this.supabase.cerrarSesion();
     this.router.navigate(['/login']);
   }
+
+  
 }

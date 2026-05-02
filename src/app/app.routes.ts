@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './guards/auth.guard';
+import { authGuard, guestGuard, adminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -15,16 +15,24 @@ export const routes: Routes = [
       import('./pages/login/login').then((m) => m.LoginComponent),
   },
   {
-    path: 'registro',
+    path: 'solicitar',
     canActivate: [guestGuard],
     loadComponent: () =>
-      import('./pages/registro/registro').then((m) => m.RegistroComponent),
+      import('./pages/solicitar/solicitar').then((m) => m.SolicitarComponent),
   },
   {
     path: 'panel',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/panel/panel').then((m) => m.PanelComponent),
+  },
+  {
+    path: 'admin/solicitudes',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./pages/admin-solicitudes/admin-solicitudes').then(
+        (m) => m.AdminSolicitudesComponent
+      ),
   },
   {
     path: 'evento/:id',
