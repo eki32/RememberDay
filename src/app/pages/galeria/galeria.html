@@ -172,7 +172,7 @@
     <!-- Flecha izquierda -->
     @if (lightboxIndex > 0) {
       <button
-        class="absolute left-3 sm:left-6 text-white/70 hover:text-white text-4xl w-12 h-12 flex items-center justify-center z-10"
+        class="absolute left-3 sm:left-6 bg-black/60 hover:bg-black/80 text-white text-3xl w-11 h-11 rounded-full flex items-center justify-center z-10 transition"
         (click)="$event.stopPropagation(); lightboxAnterior()"
         aria-label="Anterior"
       >‹</button>
@@ -189,27 +189,17 @@
     <!-- Flecha derecha -->
     @if (lightboxIndex < fotosSolo.length - 1) {
       <button
-        class="absolute right-3 sm:right-6 text-white/70 hover:text-white text-4xl w-12 h-12 flex items-center justify-center z-10"
+        class="absolute right-3 sm:right-6 bg-black/60 hover:bg-black/80 text-white text-3xl w-11 h-11 rounded-full flex items-center justify-center z-10 transition"
         (click)="$event.stopPropagation(); lightboxSiguiente()"
         aria-label="Siguiente"
       >›</button>
     }
 
-    <!-- Barra inferior: nombre + descarga -->
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
-      @if (lightboxFoto.nombre_invitado) {
-        <p class="text-white/60 text-sm">{{ lightboxFoto.nombre_invitado }}</p>
-      }
-      <a
-        [href]="lightboxFoto.url"
-        [download]="lightboxFoto.nombre_invitado ? 'foto-' + lightboxFoto.nombre_invitado + '.jpg' : 'foto.jpg'"
-        target="_blank"
-        class="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-sm px-3 py-1.5 rounded-full transition"
-        (click)="$event.stopPropagation()"
-        aria-label="Descargar foto"
-      >
-        ⬇ Descargar
-      </a>
-    </div>
+    <!-- Nombre del invitado -->
+    @if (lightboxFoto.nombre_invitado) {
+      <p class="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/60 text-sm">
+        {{ lightboxFoto.nombre_invitado }}
+      </p>
+    }
   </div>
 }
