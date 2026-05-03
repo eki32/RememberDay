@@ -119,40 +119,111 @@ export class SupabaseService {
     return data ?? [];
   }
 
-  /**
-   * Subir un archivo (foto o vídeo) al Storage y crear la fila en la tabla `fotos`.
+/**
+   * Sube un archivo (foto o vídeo) al evento.
+   * - HEIC (iPhone): se convierte automáticamente a JPEG
+   * - Imágenes: se comprimen antes de subir
+   * - Vídeos: límite de 50MB
    */
   async subirArchivo(
     eventoId: string,
     archivo: File,
     nombreInvitado: string | null
-  ): Promise<Foto | null> {
-    // Detectar si es foto o vídeo por el MIME type
-    const tipo: 'foto' | 'video' = archivo.type.startsWith('video/')
-      ? 'video'
-      : 'foto';
+  ): Promise<{ ok: boolean; motivo?: string; foto?: Foto }> {
+    // 1. Detectar HEIC (iPhone). A veces viene como type='' por bug de Safari
+    const nombreLower = archivo.name.toLowerCase();
+    const esHeic =
+      archivo.type === 'image/heic' ||
+      archivo.type === 'image/heif' ||
+      nombreLower.endsWith('.heic') ||
+      nombreLower.endsWith('.heif');
 
-    // Generar un nombre único: eventoId/timestamp-random.ext
-    const extension = archivo.name.split('.').pop() ?? 'bin';
+    // 2. Validar tipo
+    const esImagen = archivo.type.startsWith('image/') || esHeic;
+    const esVideo = archivo.type.startsWith('video/');
+
+    if (!esImagen && !esVideo) {
+      return { ok: false, motivo: 'Solo se permiten fotos o vídeos.' };
+    }
+
+    // 3. Validar tamaño según tipo
+    const MB = 1024 * 1024;
+    if (esVideo && archivo.size > 50 * MB) {
+      return {
+        ok: false,
+        motivo: 'El vídeo es demasiado grande (máx. 50 MB).',
+      };
+    }
+    if (esImagen && archivo.size > 30 * MB) {
+      return {
+        ok: false,
+        motivo: 'La foto es demasiado grande (máx. 30 MB).',
+      };
+    }
+
+    // 4. Si es HEIC, convertir primero a JPEG
+    let archivoFinal: File = archivo;
+    if (esHeic) {
+      try {
+        const heic2any = (await import('heic2any')).default;
+        const convertido = await heic2any({
+          blob: archivo,
+          toType: 'image/jpeg',
+          quality: 0.9,
+        });
+        // heic2any puede devolver Blob o Blob[]
+        const blob = Array.isArray(convertido) ? convertido[0] : convertido;
+        const nombreSinExt = archivo.name.replace(/\.[^.]+$/, '');
+        archivoFinal = new File([blob], `${nombreSinExt}.jpg`, {
+          type: 'image/jpeg',
+        });
+      } catch (err) {
+        console.error('Error al convertir HEIC:', err);
+        return {
+          ok: false,
+          motivo: 'No se pudo procesar este archivo HEIC.',
+        };
+      }
+    }
+
+    // 5. Comprimir si es imagen (también las HEIC ya convertidas)
+    if (esImagen) {
+      try {
+        const imageCompression = (await import('browser-image-compression'))
+          .default;
+        archivoFinal = await imageCompression(archivoFinal, {
+          maxSizeMB: 0.5,
+          maxWidthOrHeight: 2000,
+          useWebWorker: true,
+          fileType: archivoFinal.type,
+        });
+      } catch (err) {
+        console.warn('No se pudo comprimir, subiendo original:', err);
+      }
+    }
+
+    // 6. Generar nombre único
+    const ext = archivoFinal.name.split('.').pop()?.toLowerCase() ?? 'bin';
     const nombreUnico = `${Date.now()}-${Math.random()
       .toString(36)
-      .slice(2, 8)}.${extension}`;
+      .substring(2, 9)}.${ext}`;
     const storagePath = `${eventoId}/${nombreUnico}`;
 
-    // 1. Subir al Storage
-    const { error: errorUpload } = await this.supabase.storage
+    // 7. Subir al Storage
+    const { error: errStorage } = await this.supabase.storage
       .from(this.BUCKET)
-      .upload(storagePath, archivo, {
+      .upload(storagePath, archivoFinal, {
         cacheControl: '3600',
         upsert: false,
       });
 
-    if (errorUpload) {
-      console.error('Error al subir al Storage:', errorUpload);
-      return null;
+    if (errStorage) {
+      console.error('Error al subir al Storage:', errStorage);
+      return { ok: false, motivo: 'Error al subir el archivo.' };
     }
 
-    // 2. Insertar fila en la tabla
+    // 8. Insertar fila en la tabla
+    const tipo = esImagen ? 'foto' : 'video';
     const { data, error: errorInsert } = await this.supabase
       .from('fotos')
       .insert({
@@ -160,17 +231,18 @@ export class SupabaseService {
         storage_path: storagePath,
         tipo,
         nombre_invitado: nombreInvitado,
-        subido_por_dispositivo: this.deviceId, // 👈 NUEVO
+        subido_por_dispositivo: this.deviceId,
       })
       .select()
       .single();
 
     if (errorInsert) {
-      console.error('Error al guardar en la base de datos:', errorInsert);
-      return null;
+      console.error('Error al insertar fila:', errorInsert);
+      await this.supabase.storage.from(this.BUCKET).remove([storagePath]);
+      return { ok: false, motivo: 'Error al registrar la foto.' };
     }
 
-    return data;
+    return { ok: true, foto: data };
   }
 
   /**

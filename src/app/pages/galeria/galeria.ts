@@ -174,12 +174,19 @@ export class GaleriaComponent implements OnInit, OnDestroy {
     this.progresoSubida = { hechas: 0, total: archivos.length };
     this.cdr.detectChanges();
 
+    const errores: string[] = [];
+
     for (const archivo of archivos) {
-      await this.supabase.subirArchivo(
+      const resultado = await this.supabase.subirArchivo(
         this.evento.id,
         archivo,
         this.nombreInvitado
       );
+
+      if (!resultado.ok) {
+        errores.push(`${archivo.name}: ${resultado.motivo}`);
+      }
+
       this.progresoSubida.hechas++;
       this.cdr.detectChanges();
     }
@@ -187,5 +194,16 @@ export class GaleriaComponent implements OnInit, OnDestroy {
     this.subiendo = false;
     input.value = '';
     this.cdr.detectChanges();
+
+    // Si hubo errores, avisar al invitado
+    if (errores.length > 0) {
+      const mensaje =
+        errores.length === 1
+          ? `No se pudo subir 1 archivo:\n\n${errores[0]}`
+          : `No se pudieron subir ${errores.length} archivos:\n\n${errores
+              .slice(0, 5)
+              .join('\n')}${errores.length > 5 ? '\n…' : ''}`;
+      alert(mensaje);
+    }
   }
 }
