@@ -42,6 +42,47 @@ export class GaleriaComponent implements OnInit, OnDestroy {
   // Canal de tiempo real — lo guardamos para cerrarlo al salir
   private canalRealtime: any = null;
 
+  // Lightbox
+  lightboxFoto: FotoConUrl | null = null;
+  lightboxIndex = -1;
+
+  get fotosSolo(): FotoConUrl[] {
+    return this.fotos.filter(f => f.tipo === 'foto');
+  }
+
+  abrirLightbox(foto: FotoConUrl) {
+    if (foto.tipo !== 'foto') return;
+    this.lightboxIndex = this.fotosSolo.findIndex(f => f.id === foto.id);
+    this.lightboxFoto = foto;
+    this.cdr.detectChanges();
+  }
+
+  cerrarLightbox() {
+    this.lightboxFoto = null;
+    this.lightboxIndex = -1;
+    this.cdr.detectChanges();
+  }
+
+  lightboxAnterior() {
+    if (this.lightboxIndex <= 0) return;
+    this.lightboxIndex--;
+    this.lightboxFoto = this.fotosSolo[this.lightboxIndex];
+    this.cdr.detectChanges();
+  }
+
+  lightboxSiguiente() {
+    if (this.lightboxIndex >= this.fotosSolo.length - 1) return;
+    this.lightboxIndex++;
+    this.lightboxFoto = this.fotosSolo[this.lightboxIndex];
+    this.cdr.detectChanges();
+  }
+
+  onLightboxKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowLeft') this.lightboxAnterior();
+    else if (event.key === 'ArrowRight') this.lightboxSiguiente();
+    else if (event.key === 'Escape') this.cerrarLightbox();
+  }
+
   async ngOnInit() {
     this.nombreInvitado = sessionStorage.getItem('invitado-nombre');
     this.miDeviceId = this.supabase.getDeviceId();

@@ -74,8 +74,9 @@
                 <img
                   [src]="foto.url"
                   [alt]="foto.nombre_invitado ?? 'Foto del evento'"
-                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 cursor-zoom-in"
                   loading="lazy"
+                  (click)="abrirLightbox(foto)"
                 />
               } @else {
                 <video
@@ -147,3 +148,68 @@
     </div>
   }
 </main>
+
+<!-- Lightbox -->
+@if (lightboxFoto) {
+  <div
+    class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+    (click)="cerrarLightbox()"
+    (keydown)="onLightboxKeydown($event)"
+    tabindex="0"
+  >
+    <!-- Botón cerrar -->
+    <button
+      class="absolute top-4 right-4 text-white/70 hover:text-white text-3xl leading-none z-10 w-10 h-10 flex items-center justify-center"
+      (click)="cerrarLightbox()"
+      aria-label="Cerrar"
+    >×</button>
+
+    <!-- Contador -->
+    <span class="absolute top-5 left-1/2 -translate-x-1/2 text-white/50 text-sm">
+      {{ lightboxIndex + 1 }} / {{ fotosSolo.length }}
+    </span>
+
+    <!-- Flecha izquierda -->
+    @if (lightboxIndex > 0) {
+      <button
+        class="absolute left-3 sm:left-6 text-white/70 hover:text-white text-4xl w-12 h-12 flex items-center justify-center z-10"
+        (click)="$event.stopPropagation(); lightboxAnterior()"
+        aria-label="Anterior"
+      >‹</button>
+    }
+
+    <!-- Imagen -->
+    <img
+      [src]="lightboxFoto.url"
+      [alt]="lightboxFoto.nombre_invitado ?? 'Foto'"
+      class="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+      (click)="$event.stopPropagation()"
+    />
+
+    <!-- Flecha derecha -->
+    @if (lightboxIndex < fotosSolo.length - 1) {
+      <button
+        class="absolute right-3 sm:right-6 text-white/70 hover:text-white text-4xl w-12 h-12 flex items-center justify-center z-10"
+        (click)="$event.stopPropagation(); lightboxSiguiente()"
+        aria-label="Siguiente"
+      >›</button>
+    }
+
+    <!-- Barra inferior: nombre + descarga -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4">
+      @if (lightboxFoto.nombre_invitado) {
+        <p class="text-white/60 text-sm">{{ lightboxFoto.nombre_invitado }}</p>
+      }
+      <a
+        [href]="lightboxFoto.url"
+        [download]="lightboxFoto.nombre_invitado ? 'foto-' + lightboxFoto.nombre_invitado + '.jpg' : 'foto.jpg'"
+        target="_blank"
+        class="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-sm px-3 py-1.5 rounded-full transition"
+        (click)="$event.stopPropagation()"
+        aria-label="Descargar foto"
+      >
+        ⬇ Descargar
+      </a>
+    </div>
+  </div>
+}
