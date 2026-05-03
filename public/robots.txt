@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /panel
+Disallow: /admin
+Disallow: /login
+Disallow: /solicitar
+
+Sitemap: https://recuerdatudia.com/sitemap.xml
