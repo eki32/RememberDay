@@ -4,56 +4,56 @@ import { SupabaseService } from '../services/supabase';
 
 /**
  * Guard para rutas privadas (panel, panel-evento).
- * Si NO hay sesión → redirige a /login.
+ * Si NO hay sesión → redirige a /login pasando la URL original como ?redirect=
  */
-export const authGuard: CanActivateFn = async () => {
+export const authGuard: CanActivateFn = async (route, state) => {
   const supabase = inject(SupabaseService);
   const router = inject(Router);
 
   const usuario = await supabase.getUsuarioActual();
-  if (usuario) {
-    return true; // hay sesión → deja entrar
-  }
+  if (usuario) return true;
 
-  router.navigate(['/login']);
-  return false; // no hay sesión → bloquea
+  // Guardamos la URL a la que querían ir para volver tras login
+  router.navigate(['/login'], {
+    queryParams: { redirect: state.url },
+  });
+  return false;
 };
 
 /**
- * Guard para rutas de "invitado" (home, login, registro).
- * Si SÍ hay sesión → redirige a /panel (no tiene sentido verlas logueado).
+ * Guard para rutas de "invitado" (home, login, solicitar).
+ * Si SÍ hay sesión → redirige a /panel.
  */
 export const guestGuard: CanActivateFn = async () => {
   const supabase = inject(SupabaseService);
   const router = inject(Router);
 
   const usuario = await supabase.getUsuarioActual();
-  if (!usuario) {
-    return true; // no hay sesión → deja ver login/registro/home
-  }
+  if (!usuario) return true;
 
   router.navigate(['/panel']);
-  return false; // hay sesión → bloquea
+  return false;
 };
 
 /**
  * Guard para rutas de administración.
- * Si no hay sesión → /login.
- * Si hay sesión pero no es admin → /panel (acceso denegado silenciosamente).
+ * Si no hay sesión → /login con redirect.
+ * Si hay sesión pero no es admin → /panel.
  */
-export const adminGuard: CanActivateFn = async () => {
+export const adminGuard: CanActivateFn = async (route, state) => {
   const supabase = inject(SupabaseService);
   const router = inject(Router);
 
   const usuario = await supabase.getUsuarioActual();
   if (!usuario) {
-    router.navigate(['/login']);
+    router.navigate(['/login'], {
+      queryParams: { redirect: state.url },
+    });
     return false;
   }
 
   const esAdmin = await supabase.esAdmin();
   if (!esAdmin) {
-    // No es admin: lo mandamos al panel normal sin armar escándalo
     router.navigate(['/panel']);
     return false;
   }
