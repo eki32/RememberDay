@@ -23,6 +23,8 @@ export class AdminSolicitudesComponent implements OnInit {
   seleccionada: Solicitud | null = null;
   notasEdit = '';
   guardandoNotas = false;
+  creandoCuenta = false;
+
 
   estados: { valor: Solicitud['estado']; etiqueta: string; color: string }[] = [
     { valor: 'pendiente', etiqueta: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
@@ -129,6 +131,42 @@ export class AdminSolicitudesComponent implements OnInit {
 
     this.guardandoNotas = false;
     this.cdr.detectChanges();
+  }
+
+  async crearCuenta() {
+    if (!this.seleccionada) return;
+
+    // Confirmación antes de crear (es una acción importante)
+    const confirmado = confirm(
+      `¿Crear cuenta para ${this.seleccionada.nombre}?\n\n` +
+      `Se generará una contraseña automática y se enviará por email a:\n` +
+      `${this.seleccionada.email}`
+    );
+    if (!confirmado) return;
+
+    this.creandoCuenta = true;
+    this.cdr.detectChanges();
+
+    const resultado = await this.supabase.crearCuentaParaSolicitud(
+      this.seleccionada.id
+    );
+
+    this.creandoCuenta = false;
+
+    if (resultado.ok) {
+      // Actualizar el estado en pantalla a 'cuenta_creada'
+      this.seleccionada.estado = 'cuenta_creada';
+      const idx = this.solicitudes.findIndex(
+        (s) => s.id === this.seleccionada!.id
+      );
+      if (idx !== -1) this.solicitudes[idx].estado = 'cuenta_creada';
+      this.cdr.detectChanges();
+
+      alert('✅ Cuenta creada y email enviado al cliente.');
+    } else {
+      alert(`❌ Error: ${resultado.error ?? 'No se pudo crear la cuenta.'}`);
+      this.cdr.detectChanges();
+    }
   }
 
   async cerrarSesion() {

@@ -561,4 +561,39 @@ export class SupabaseService {
     }
     return true;
   }
+
+  /**
+   * Crear cuenta de cliente desde una solicitud.
+   * Llama a la Edge Function 'crear-cuenta-cliente' que:
+   * - Genera password aleatorio
+   * - Crea el usuario en Auth
+   * - Envía email con credenciales
+   * - Actualiza la solicitud a 'cuenta_creada'
+   */
+  async crearCuentaParaSolicitud(
+    solicitudId: string
+  ): Promise<{ ok: boolean; error?: string }> {
+    const { data: { session } } = await this.supabase.auth.getSession();
+    if (!session) {
+      return { ok: false, error: 'No hay sesión activa' };
+    }
+
+    const { data, error } = await this.supabase.functions.invoke(
+      'crear-cuenta-cliente',
+      {
+        body: { solicitudId },
+      }
+    );
+
+    if (error) {
+      console.error('Error al invocar la function:', error);
+      return { ok: false, error: error.message };
+    }
+
+    if (data?.error) {
+      return { ok: false, error: data.error };
+    }
+
+    return { ok: true };
+  }
 }
