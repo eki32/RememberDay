@@ -9,8 +9,25 @@
     </div>
   } @else {
     <div class="max-w-md w-full bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
-      <!-- Cabecera con un toque de color -->
+      <!-- Cabecera con logo del organizador -->
       <div class="px-6 sm:px-8 pt-8 pb-6 text-center bg-gradient-to-b from-stone-50 to-white border-b border-stone-100">
+        <!-- Logo (organizador o Recuerda tu Día por defecto) -->
+        <div class="flex justify-center mb-4">
+          @if (logoOrganizador) {
+            <img
+              [src]="logoOrganizador"
+              alt="Logo del organizador"
+              class="h-20 w-auto rounded-2xl"
+            />
+          } @else {
+            <img
+              src="/logo.png"
+              alt="Recuerda tu Día"
+              class="h-20 w-auto rounded-2xl"
+            />
+          }
+        </div>
+
         <p class="text-xs uppercase tracking-widest text-stone-400 mb-2">Bienvenido a</p>
         <h1 class="text-3xl sm:text-4xl font-serif text-stone-900 mb-2">{{ evento.titulo }}</h1>
         <p class="text-sm text-stone-500">{{ evento.fecha }} · {{ evento.lugar }}</p>

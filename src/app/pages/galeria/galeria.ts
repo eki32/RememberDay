@@ -24,6 +24,8 @@ export class GaleriaComponent implements OnInit, OnDestroy {
   private supabase = inject(SupabaseService);
   private cdr = inject(ChangeDetectorRef);
 
+  logoOrganizador: string | null = null;
+
   slug = this.route.snapshot.paramMap.get('id') ?? '';
   evento: Evento | null = null;
   fotos: FotoConUrl[] = [];
@@ -45,7 +47,16 @@ export class GaleriaComponent implements OnInit, OnDestroy {
     this.miDeviceId = this.supabase.getDeviceId();
 
     this.evento = await this.supabase.getEventoPorSlug(this.slug);
+
     if (this.evento) {
+      // Cargar el logo del organizador (white label)
+      if (this.evento.organizador_id) {
+        const perfil = await this.supabase.getPerfilOrganizador(
+          this.evento.organizador_id
+        );
+        this.logoOrganizador = perfil?.logo_url ?? null;
+      }
+
       await this.cargarFotos();
       this.suscribirseATiempoReal();
     }
@@ -66,7 +77,7 @@ export class GaleriaComponent implements OnInit, OnDestroy {
     }
   }
 
- private suscribirseATiempoReal() {
+  private suscribirseATiempoReal() {
     if (!this.evento) return;
 
     this.canalRealtime = this.supabase.suscribirseACambiosDeFotos(
@@ -133,7 +144,7 @@ export class GaleriaComponent implements OnInit, OnDestroy {
     return Date.now() - subidoEn < 5 * 60 * 1000;
   }
 
-async borrarFoto(foto: FotoConUrl, event: Event) {
+  async borrarFoto(foto: FotoConUrl, event: Event) {
     event.stopPropagation();
     event.preventDefault();
 

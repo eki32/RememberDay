@@ -15,18 +15,26 @@ export class BienvenidaComponent implements OnInit {
   private router = inject(Router);
   private supabase = inject(SupabaseService);
   private cdr = inject(ChangeDetectorRef);
+  logoOrganizador: string | null = null;
 
   slug = this.route.snapshot.paramMap.get('id') ?? '';
   evento: Evento | null = null;
   cargando = true;
   nombre = '';
 
-  async ngOnInit() {
-    console.log('🔍 ngOnInit - buscando slug:', this.slug);
+async ngOnInit() {
     this.evento = await this.supabase.getEventoPorSlug(this.slug);
-    console.log('✅ Evento recibido:', this.evento);
+
+    // Cargar logo del organizador (si tiene)
+    if (this.evento?.organizador_id) {
+      const perfil = await this.supabase.getPerfilOrganizador(
+        this.evento.organizador_id
+      );
+      this.logoOrganizador = perfil?.logo_url ?? null;
+    }
+
     this.cargando = false;
-    this.cdr.detectChanges(); // 👈 forzar actualización de UI
+    this.cdr.detectChanges();
   }
 
   entrar() {

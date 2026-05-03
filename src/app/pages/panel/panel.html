@@ -11,6 +11,9 @@
           Admin
         </a>
       }
+      <button (click)="abrirBranding()" class="text-sm text-stone-600 hover:text-stone-900 transition">
+    Mi marca
+  </button>
       <button (click)="cerrarSesion()" class="text-sm text-stone-600 hover:text-stone-900 transition">
         Cerrar sesión
       </button>
@@ -86,4 +89,69 @@
       </div>
     </div>
   }
+  <!-- Modal Mi Marca -->
+@if (mostrandoBranding) {
+  <div
+    class="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-20"
+    (click)="cerrarBranding()"
+  >
+    <div
+      class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-start justify-between mb-2">
+        <h2 class="text-2xl font-serif text-stone-900">Tu marca</h2>
+        <button (click)="cerrarBranding()" class="text-stone-400 hover:text-stone-700 text-2xl leading-none">
+          ×
+        </button>
+      </div>
+      <p class="text-sm text-stone-500 mb-6">
+        Este logo aparecerá en las galerías de tus eventos en lugar del de Recuerda tu Día.
+      </p>
+
+      <!-- Vista previa del logo actual -->
+      <div class="flex items-center justify-center bg-stone-50 border border-stone-200 rounded-2xl py-8 mb-4">
+        @if (miPerfil?.logo_url) {
+          <img [src]="miPerfil.logo_url" alt="Tu logo" class="h-32 w-auto rounded-2xl" />
+        } @else {
+          <div class="text-center">
+            <div class="text-4xl mb-2 opacity-30">🏷️</div>
+            <p class="text-sm text-stone-500">Aún no has subido un logo</p>
+          </div>
+        }
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="space-y-3">
+        <label
+          class="block w-full bg-stone-900 text-white py-3 rounded-xl text-sm font-medium hover:bg-stone-800 transition text-center cursor-pointer"
+          [class.opacity-50]="subiendoLogo"
+          [class.cursor-not-allowed]="subiendoLogo"
+        >
+          {{ subiendoLogo ? 'Subiendo…' : (miPerfil?.logo_url ? 'Cambiar logo' : 'Subir logo') }}
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onLogoSeleccionado($event)"
+            [disabled]="subiendoLogo"
+            class="hidden"
+          />
+        </label>
+
+        @if (miPerfil?.logo_url) {
+          <button
+            (click)="quitarLogo()"
+            class="block w-full bg-white text-stone-700 border border-stone-300 py-3 rounded-xl text-sm font-medium hover:bg-stone-50 transition"
+          >
+            Quitar logo
+          </button>
+        }
+      </div>
+
+      <p class="text-xs text-stone-400 mt-4 text-center">
+        Formato recomendado: PNG cuadrado, fondo transparente. Máximo 2 MB.
+      </p>
+    </div>
+  </div>
+}
 </main>

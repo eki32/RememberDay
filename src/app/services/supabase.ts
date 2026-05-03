@@ -39,6 +39,14 @@ export interface Solicitud {
   actualizado_en: string;
 }
 
+export interface Perfil {
+  id: string;
+  is_admin: boolean;
+  nombre: string | null;
+  logo_url: string | null;
+  creado_en: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -595,5 +603,118 @@ export class SupabaseService {
     }
 
     return { ok: true };
+  }
+
+  // ============================================
+  // PERFIL DEL ORGANIZADOR (logo, white label)
+  // ============================================
+
+  private readonly BUCKET_LOGOS = 'logos-organizadores';
+
+  /**
+   * Obtiene el perfil del usuario actual (incluyendo logo_url).
+   */
+  async getMiPerfil(): Promise<Perfil | null> {
+    const usuario = await this.getUsuarioActual();
+    if (!usuario) return null;
+
+    const { data, error } = await this.supabase
+      .from('perfiles')
+      .select('*')
+      .eq('id', usuario.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error al cargar perfil:', error);
+      return null;
+    }
+    return data;
+  }
+
+  /**
+   * Obtiene el perfil de un organizador concreto por su ID
+   * (lo usaremos para mostrar el logo en la galería del invitado).
+   */
+  async getPerfilOrganizador(organizadorId: string): Promise<Perfil | null> {
+    const { data, error } = await this.supabase
+      .from('perfiles')
+      .select('*')
+      .eq('id', organizadorId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error al cargar perfil del organizador:', error);
+      return null;
+    }
+    return data;
+  }
+
+  /**
+   * Subir/reemplazar el logo del usuario actual.
+   * Devuelve la URL pública del logo o null si falla.
+   */
+  async subirLogo(archivo: File): Promise<string | null> {
+    const usuario = await this.getUsuarioActual();
+    if (!usuario) return null;
+
+    // Path: {user-id}/logo.{ext}
+    const ext = archivo.name.split('.').pop()?.toLowerCase() ?? 'png';
+    const path = `${usuario.id}/logo.${ext}`;
+
+    // Subir (upsert: si ya existe, lo reemplaza)
+    const { error: errUpload } = await this.supabase.storage
+      .from(this.BUCKET_LOGOS)
+      .upload(path, archivo, { upsert: true, cacheControl: '3600' });
+
+    if (errUpload) {
+      console.error('Error al subir logo:', errUpload);
+      return null;
+    }
+
+    // Obtener URL pública (con cache-buster para evitar caché del navegador)
+    const { data } = this.supabase.storage
+      .from(this.BUCKET_LOGOS)
+      .getPublicUrl(path);
+
+    const urlConCacheBuster = `${data.publicUrl}?v=${Date.now()}`;
+
+    // Guardar la URL en la tabla perfiles
+    const { error: errUpdate } = await this.supabase
+      .from('perfiles')
+      .update({ logo_url: urlConCacheBuster })
+      .eq('id', usuario.id);
+
+    if (errUpdate) {
+      console.error('Error al guardar URL del logo:', errUpdate);
+      return null;
+    }
+
+    return urlConCacheBuster;
+  }
+
+  /**
+   * Eliminar el logo del usuario actual.
+   */
+  async eliminarLogo(): Promise<boolean> {
+    const usuario = await this.getUsuarioActual();
+    if (!usuario) return false;
+
+    // Borrar todos los archivos en la carpeta del usuario
+    const { data: archivos } = await this.supabase.storage
+      .from(this.BUCKET_LOGOS)
+      .list(usuario.id);
+
+    if (archivos && archivos.length > 0) {
+      const paths = archivos.map((f) => `${usuario.id}/${f.name}`);
+      await this.supabase.storage.from(this.BUCKET_LOGOS).remove(paths);
+    }
+
+    // Quitar la URL del perfil
+    const { error } = await this.supabase
+      .from('perfiles')
+      .update({ logo_url: null })
+      .eq('id', usuario.id);
+
+    return !error;
   }
 }
