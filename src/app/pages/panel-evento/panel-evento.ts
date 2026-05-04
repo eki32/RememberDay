@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { QRCodeComponent } from 'angularx-qrcode';
@@ -21,6 +21,8 @@ export class PanelEventoComponent implements OnInit {
   private supabase = inject(SupabaseService);
   private cdr = inject(ChangeDetectorRef);
 
+  @ViewChild('cartelRef') cartelRef!: ElementRef<HTMLDivElement>;
+
   eventoId = this.route.snapshot.paramMap.get('id') ?? '';
   evento: Evento | null = null;
   fotos: FotoConUrl[] = [];
@@ -28,15 +30,15 @@ export class PanelEventoComponent implements OnInit {
   descargando = false;
   progresoDescarga = { hechas: 0, total: 0 };
   eliminando = false;
+  generandoCartel = false;
+  logoOrganizador: string | null = null;
 
-  // Para generar el QR
   get urlInvitado(): string {
     if (!this.evento) return '';
     return `${window.location.origin}/evento/${this.evento.slug}`;
   }
 
-async ngOnInit() {
-    // Ya no comprobamos sesión — lo hace authGuard
+  async ngOnInit() {
     this.evento = await this.supabase.getEventoPorId(this.eventoId);
     if (this.evento) {
       const fotos = await this.supabase.getFotosDeEvento(this.evento.id);
@@ -44,6 +46,9 @@ async ngOnInit() {
         ...f,
         url: this.supabase.getUrlPublica(f.storage_path),
       }));
+      // Cargar logo del organizador para el cartel
+      const perfil = await this.supabase.getMiPerfil();
+      this.logoOrganizador = perfil?.logo_url ?? null;
     }
     this.cargando = false;
     this.cdr.detectChanges();
@@ -57,19 +62,13 @@ async ngOnInit() {
     return this.fotos.filter((f) => f.tipo === 'video').length;
   }
 
-  /**
-   * Descargar el QR como imagen PNG.
-   */
   descargarQR() {
     const svg = document.querySelector('qrcode svg') as SVGElement;
     if (!svg) return;
-
-    // Convertir SVG a PNG con un canvas
     const svgData = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
-
     img.onload = () => {
       canvas.width = 800;
       canvas.height = 800;
@@ -83,21 +82,73 @@ async ngOnInit() {
       a.download = `QR-${this.evento?.slug}.png`;
       a.click();
     };
-
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   }
 
-  /**
-   * Copiar al portapapeles la URL del invitado.
-   */
   async copiarUrl() {
     await navigator.clipboard.writeText(this.urlInvitado);
     alert('URL copiada al portapapeles');
   }
 
   /**
-   * Descargar todas las fotos en un ZIP.
+   * Genera y descarga el cartel A6 del evento como PNG.
+   * Usa html2canvas para convertir el div del cartel a imagen.
    */
+  async descargarCartel() {
+    if (!this.evento) return;
+
+    this.generandoCartel = true;
+    this.cdr.detectChanges();
+
+    // Pequeña espera para que el DOM se actualice y el cartel sea visible
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const jsPDF = (await import('jspdf')).jsPDF;
+
+      const cartelEl = this.cartelRef.nativeElement;
+
+      // Hacer visible temporalmente para capturar
+      cartelEl.style.position = 'fixed';
+      cartelEl.style.top = '-9999px';
+      cartelEl.style.left = '-9999px';
+      cartelEl.style.display = 'block';
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const canvas = await html2canvas(cartelEl, {
+        scale: 3, // Alta resolución para impresión
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+
+      cartelEl.style.display = 'none';
+      cartelEl.style.position = '';
+      cartelEl.style.top = '';
+      cartelEl.style.left = '';
+
+      // A6 = 105 × 148 mm
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a6',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, 105, 148);
+      pdf.save(`Cartel-${this.evento.slug}.pdf`);
+
+    } catch (err) {
+      console.error('Error generando cartel:', err);
+      alert('No se pudo generar el cartel. Inténtalo de nuevo.');
+    }
+
+    this.generandoCartel = false;
+    this.cdr.detectChanges();
+  }
+
   async descargarTodasLasFotos() {
     if (this.fotos.length === 0) {
       alert('No hay fotos para descargar.');
@@ -113,7 +164,6 @@ async ngOnInit() {
     for (const foto of this.fotos) {
       const blob = await this.supabase.descargarArchivo(foto.storage_path);
       if (blob) {
-        // Nombre del archivo: TIPO-NOMBRE-FECHA.ext
         const ext = foto.storage_path.split('.').pop() ?? 'bin';
         const fecha = new Date(foto.subido_en).toISOString().slice(0, 10);
         const autor = foto.nombre_invitado
@@ -138,9 +188,6 @@ async ngOnInit() {
     this.cdr.detectChanges();
   }
 
-  /**
-   * Eliminar el evento (con confirmación).
-   */
   async eliminarEvento() {
     if (!this.evento) return;
     const confirmacion = confirm(
