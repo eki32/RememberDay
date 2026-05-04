@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import { ToastService } from './toast';
 
 
 
@@ -57,6 +58,7 @@ export class SupabaseService {
   private supabase: SupabaseClient;
   private readonly BUCKET = 'fotos-eventos';
   private deviceId: string;
+  private toast = inject(ToastService);
 
   constructor() {
     this.supabase = createClient(
@@ -863,18 +865,18 @@ async iniciarPago(
 
       if (error) {
         console.error('Error función:', error);
-        alert(`Error: ${error.message}`);
+        this.toast.error(error.message);
         return;
       }
 
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        alert('No se pudo iniciar el pago.');
+        this.toast.error('No se pudo iniciar el pago.');
       }
     } catch (err) {
       console.error('Error:', err);
-      alert('Error de conexión.');
+      this.toast.error('Error de conexión. Comprueba tu internet.');
     }
   }
 }

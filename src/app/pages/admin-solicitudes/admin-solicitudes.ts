@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService, Solicitud } from '../../services/supabase';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-admin-solicitudes',
@@ -14,6 +15,7 @@ export class AdminSolicitudesComponent implements OnInit {
   private supabase = inject(SupabaseService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private toast = inject(ToastService);
 
   solicitudes: Solicitud[] = [];
   cargando = true;
@@ -106,7 +108,7 @@ export class AdminSolicitudesComponent implements OnInit {
       if (idx !== -1) this.solicitudes[idx].estado = nuevoEstado;
       this.cdr.detectChanges();
     } else {
-      alert('No se pudo cambiar el estado.');
+      this.toast.error('No se pudo cambiar el estado.');
     }
   }
 
@@ -126,7 +128,7 @@ export class AdminSolicitudesComponent implements OnInit {
       const idx = this.solicitudes.findIndex((s) => s.id === this.seleccionada!.id);
       if (idx !== -1) this.solicitudes[idx].notas_admin = this.notasEdit;
     } else {
-      alert('No se pudieron guardar las notas.');
+      this.toast.error('No se pudieron guardar las notas.');
     }
 
     this.guardandoNotas = false;
@@ -162,9 +164,9 @@ export class AdminSolicitudesComponent implements OnInit {
       if (idx !== -1) this.solicitudes[idx].estado = 'cuenta_creada';
       this.cdr.detectChanges();
 
-      alert('✅ Cuenta creada y email enviado al cliente.');
+      this.toast.exito('Cuenta creada y email enviado al cliente.');
     } else {
-      alert(`❌ Error: ${resultado.error ?? 'No se pudo crear la cuenta.'}`);
+      this.toast.error(resultado.error ?? 'No se pudo crear la cuenta.');
       this.cdr.detectChanges();
     }
   }

@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService, Evento } from '../../services/supabase';
+import { ToastService } from '../../services/toast';
 
 @Component({
   selector: 'app-panel',
@@ -14,6 +15,7 @@ export class PanelComponent implements OnInit {
   private supabase = inject(SupabaseService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private toast = inject(ToastService);
 
   eventos: Evento[] = [];
   cargando = true;
@@ -74,7 +76,7 @@ async crearEvento() {
       this.cerrarFormulario();
       await this.cargarEventos();
     } else {
-      alert('No se pudo crear el evento. Intenta de nuevo.');
+      this.toast.error('No se pudo crear el evento. Intenta de nuevo.');
     }
   }
 
@@ -99,14 +101,14 @@ async crearEvento() {
 
     // Validar tamaño (máx 2MB)
     if (archivo.size > 2 * 1024 * 1024) {
-      alert('El logo no puede pesar más de 2 MB.');
+      this.toast.error('El logo no puede pesar más de 2 MB.');
       input.value = '';
       return;
     }
 
     // Validar tipo
     if (!archivo.type.startsWith('image/')) {
-      alert('El archivo debe ser una imagen.');
+      this.toast.error('El archivo debe ser una imagen.');
       input.value = '';
       return;
     }
@@ -118,7 +120,7 @@ async crearEvento() {
     if (url) {
       this.miPerfil = { ...this.miPerfil, logo_url: url };
     } else {
-      alert('No se pudo subir el logo. Intenta de nuevo.');
+      this.toast.error('No se pudo subir el logo. Intenta de nuevo.');
     }
 
     this.subiendoLogo = false;
@@ -135,7 +137,7 @@ async crearEvento() {
       this.miPerfil = { ...this.miPerfil, logo_url: null };
       this.cdr.detectChanges();
     } else {
-      alert('No se pudo eliminar el logo.');
+      this.toast.error('No se pudo eliminar el logo.');
     }
   }
 

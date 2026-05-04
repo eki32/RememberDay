@@ -1,0 +1,23 @@
+<div class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-full max-w-sm px-4 sm:px-0 pointer-events-none">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div
+      class="flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg text-sm font-medium pointer-events-auto"
+      [ngClass]="{
+        'bg-green-800 text-green-50': toast.tipo === 'exito',
+        'bg-red-800 text-red-50': toast.tipo === 'error',
+        'bg-stone-800 text-stone-50': toast.tipo === 'info'
+      }"
+    >
+      <span class="flex-shrink-0 mt-0.5">
+        @if (toast.tipo === 'exito') { ✅ }
+        @if (toast.tipo === 'error') { ❌ }
+        @if (toast.tipo === 'info') { ℹ️ }
+      </span>
+      <span class="flex-1 leading-relaxed">{{ toast.mensaje }}</span>
+      <button
+        (click)="toastService.cerrar(toast.id)"
+        class="flex-shrink-0 opacity-60 hover:opacity-100 transition text-lg leading-none"
+      >×</button>
+    </div>
+  }
+</div>

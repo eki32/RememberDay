@@ -8,6 +8,7 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Evento, Foto, SupabaseService } from '../../services/supabase';
+import { ToastService } from '../../services/toast';
 
 interface FotoConUrl extends Foto {
   url: string;
@@ -23,6 +24,7 @@ export class GaleriaComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private supabase = inject(SupabaseService);
   private cdr = inject(ChangeDetectorRef);
+  private toast = inject(ToastService);
 
   logoOrganizador: string | null = null;
 
@@ -210,7 +212,7 @@ async ngOnInit() {
     const resultado = await this.supabase.eliminarFoto(foto);
 
     if (!resultado.ok) {
-      alert(resultado.motivo ?? 'No se pudo borrar la foto.');
+      this.toast.error(resultado.motivo ?? 'No se pudo borrar la foto.');
       this.borrandoIds.delete(foto.id);
       this.cdr.detectChanges();
     }
@@ -256,7 +258,7 @@ async ngOnInit() {
           : `No se pudieron subir ${errores.length} archivos:\n\n${errores
               .slice(0, 5)
               .join('\n')}${errores.length > 5 ? '\n…' : ''}`;
-      alert(mensaje);
+      this.toast.error(mensaje);
     }
   }
 }

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { QRCodeComponent } from 'angularx-qrcode';
 import JSZip from 'jszip';
 import { SupabaseService, Evento, Foto } from '../../services/supabase';
+import { ToastService } from '../../services/toast';
 
 interface FotoConUrl extends Foto {
   url: string;
@@ -20,6 +21,7 @@ export class PanelEventoComponent implements OnInit {
   private router = inject(Router);
   private supabase = inject(SupabaseService);
   private cdr = inject(ChangeDetectorRef);
+  private toast = inject(ToastService);
 
   @ViewChild('cartelRef') cartelRef!: ElementRef<HTMLDivElement>;
 
@@ -87,7 +89,7 @@ export class PanelEventoComponent implements OnInit {
 
   async copiarUrl() {
     await navigator.clipboard.writeText(this.urlInvitado);
-    alert('URL copiada al portapapeles');
+    this.toast.exito('URL copiada al portapapeles');
   }
 
   /**
@@ -141,7 +143,7 @@ export class PanelEventoComponent implements OnInit {
       pdf.save(`Cartel-${this.evento.slug}.pdf`);
     } catch (err) {
       console.error('Error generando cartel:', err);
-      alert('No se pudo generar el cartel. Inténtalo de nuevo.');
+      this.toast.error('No se pudo generar el cartel. Inténtalo de nuevo.');
     }
 
     this.generandoCartel = false;
@@ -150,7 +152,7 @@ export class PanelEventoComponent implements OnInit {
 
   async descargarTodasLasFotos() {
     if (this.fotos.length === 0) {
-      alert('No hay fotos para descargar.');
+      this.toast.info('No hay fotos para descargar.');
       return;
     }
 
@@ -199,7 +201,7 @@ export class PanelEventoComponent implements OnInit {
     if (ok) {
       this.router.navigate(['/panel']);
     } else {
-      alert('No se pudo eliminar el evento.');
+      this.toast.error('No se pudo eliminar el evento.');
       this.eliminando = false;
       this.cdr.detectChanges();
     }
