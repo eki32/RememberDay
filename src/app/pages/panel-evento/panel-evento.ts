@@ -238,7 +238,7 @@ Funciona desde el móvil, sin descargar ninguna app.
 
 Te comparto el enlace del álbum de fotos de *${this.evento.titulo}* para que puedas subir tus fotos del día.
 
-👉 ${this.urlInvitado}
+${this.urlInvitado}
 
 Es muy fácil:
 - Abre el enlace desde tu móvil

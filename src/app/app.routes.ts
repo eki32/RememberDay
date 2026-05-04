@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard, adminGuard } from './guards/auth.guard';
+import { NotFoundComponent } from './not-found/not-found';
 
 export const routes: Routes = [
   {
@@ -54,4 +55,10 @@ export const routes: Routes = [
         (m) => m.PanelEventoComponent
       ),
   },
+  {
+  path: '**',
+  component: NotFoundComponent,
+}
+
+  
 ];
