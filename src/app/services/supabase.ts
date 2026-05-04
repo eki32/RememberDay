@@ -789,4 +789,42 @@ export class SupabaseService {
 
     return !error;
   }
+  /**
+   * Crear sesión de pago de Stripe.
+   * Redirige al usuario a la página de pago de Stripe.
+   */
+async iniciarPago(
+    priceId: string,
+    modo: 'payment' | 'subscription'
+  ): Promise<void> {
+    try {
+      const { data, error } = await this.supabase.functions.invoke(
+        'crear-sesion-pago',
+        {
+          body: { priceId, modo },
+          headers: {
+            'Authorization': `Bearer ${environment.supabaseAnonKey}`,
+          },
+        }
+      );
+
+      console.log('Data:', data);
+      console.log('Error:', error);
+
+      if (error) {
+        console.error('Error función:', error);
+        alert(`Error: ${error.message}`);
+        return;
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        alert('No se pudo iniciar el pago.');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error de conexión.');
+    }
+  }
 }

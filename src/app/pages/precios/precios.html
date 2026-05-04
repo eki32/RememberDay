@@ -1,0 +1,220 @@
+<main class="min-h-screen bg-stone-50">
+  <!-- Header -->
+  <header class="bg-white border-b border-stone-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+      <a routerLink="/" class="flex items-center gap-2">
+        <img src="/imagenLogo.png" alt="Recuerda tu Día" class="h-8 w-auto rounded-lg" />
+      </a>
+      <a routerLink="/login" class="text-sm text-stone-600 hover:text-stone-900 transition">
+        Iniciar sesión
+      </a>
+    </div>
+  </header>
+
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 py-16">
+
+    <!-- Título -->
+    <div class="text-center mb-14">
+      <p class="text-xs uppercase tracking-widest text-stone-400 mb-3">Precios</p>
+      <h1 class="text-4xl sm:text-5xl font-serif text-stone-900 mb-4">
+        Simple y transparente
+      </h1>
+      <p class="text-stone-500 text-lg max-w-xl mx-auto">
+        Sin sorpresas. Sin permanencia. Elige el plan que se adapta a tu evento.
+      </p>
+    </div>
+
+    <!-- Cards de precios -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+
+      <!-- Plan Gratis -->
+      <div class="bg-white rounded-3xl border border-stone-200 p-8 flex flex-col">
+        <div class="mb-6">
+          <p class="text-xs uppercase tracking-widest text-stone-400 mb-2">Prueba gratis</p>
+          <div class="flex items-end gap-1 mb-1">
+            <span class="text-4xl font-serif text-stone-900">0€</span>
+          </div>
+          <p class="text-sm text-stone-500">Para ver cómo funciona</p>
+        </div>
+
+        <ul class="space-y-3 flex-1 mb-8">
+          <li class="flex items-start gap-2 text-sm text-stone-600">
+            <span class="text-stone-400 mt-0.5">✓</span>
+            1 evento de prueba
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-600">
+            <span class="text-stone-400 mt-0.5">✓</span>
+            Máximo 30 fotos
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-600">
+            <span class="text-stone-400 mt-0.5">✓</span>
+            Galería durante 7 días
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-400 line-through">
+            <span class="mt-0.5">✗</span>
+            Descarga ZIP
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-400 line-through">
+            <span class="mt-0.5">✗</span>
+            Cartel imprimible
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-400 line-through">
+            <span class="mt-0.5">✗</span>
+            Tu logo (white label)
+          </li>
+        </ul>
+
+        <a
+          routerLink="/solicitar"
+          class="block text-center bg-stone-100 text-stone-700 py-3 rounded-xl font-medium hover:bg-stone-200 transition text-sm"
+        >
+          Solicitar acceso gratis
+        </a>
+      </div>
+
+      <!-- Plan Evento Único -->
+      <div class="bg-white rounded-3xl border border-stone-200 p-8 flex flex-col">
+        <div class="mb-6">
+          <p class="text-xs uppercase tracking-widest text-stone-400 mb-2">Evento único</p>
+          <div class="flex items-end gap-1 mb-1">
+            <span class="text-4xl font-serif text-stone-900">4€</span>
+            <span class="text-stone-400 text-sm mb-1">/ evento</span>
+          </div>
+          <p class="text-sm text-stone-500">Para una boda, comunión o cumpleaños</p>
+        </div>
+
+        <ul class="space-y-3 flex-1 mb-8">
+          <li class="flex items-start gap-2 text-sm text-stone-600">
+            <span class="text-green-500 mt-0.5">✓</span>
+            1 evento completo
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-600">
+            <span class="text-green-500 mt-0.5">✓</span>
+            Fotos y vídeos ilimitados
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-600">
+            <span class="text-green-500 mt-0.5">✓</span>
+            Galería durante 6 meses
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-600">
+            <span class="text-green-500 mt-0.5">✓</span>
+            Descarga ZIP en alta calidad
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-600">
+            <span class="text-green-500 mt-0.5">✓</span>
+            Cartel QR imprimible (PDF)
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-400 line-through">
+            <span class="mt-0.5">✗</span>
+            Tu logo (white label)
+          </li>
+        </ul>
+
+        <button
+          (click)="elegirPlan('evento')"
+          [disabled]="cargandoPago !== ''"
+          class="w-full bg-stone-900 text-white py-3 rounded-xl font-medium hover:bg-stone-800 transition text-sm disabled:opacity-50"
+        >
+          {{ cargandoPago === 'evento' ? 'Redirigiendo…' : 'Comprar por 4€' }}
+        </button>
+      </div>
+
+      <!-- Plan Pro -->
+      <div class="bg-stone-900 rounded-3xl border border-stone-800 p-8 flex flex-col relative overflow-hidden">
+        <!-- Badge "Más popular" -->
+        <div class="absolute top-4 right-4">
+          <span class="bg-white text-stone-900 text-xs font-medium px-3 py-1 rounded-full">
+            Más popular
+          </span>
+        </div>
+
+        <div class="mb-6">
+          <p class="text-xs uppercase tracking-widest text-stone-400 mb-2">Plan Pro</p>
+          <div class="flex items-end gap-1 mb-1">
+            <span class="text-4xl font-serif text-white">19€</span>
+            <span class="text-stone-400 text-sm mb-1">/ mes</span>
+          </div>
+          <p class="text-sm text-stone-400">Para wedding planners y fotógrafos</p>
+        </div>
+
+        <ul class="space-y-3 flex-1 mb-8">
+          <li class="flex items-start gap-2 text-sm text-stone-300">
+            <span class="text-green-400 mt-0.5">✓</span>
+            Eventos ilimitados
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-300">
+            <span class="text-green-400 mt-0.5">✓</span>
+            Fotos y vídeos ilimitados
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-300">
+            <span class="text-green-400 mt-0.5">✓</span>
+            Galerías permanentes
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-300">
+            <span class="text-green-400 mt-0.5">✓</span>
+            Descarga ZIP en alta calidad
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-300">
+            <span class="text-green-400 mt-0.5">✓</span>
+            Cartel QR imprimible (PDF)
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-300">
+            <span class="text-green-400 mt-0.5">✓</span>
+            Tu logo en cada evento
+          </li>
+          <li class="flex items-start gap-2 text-sm text-stone-300">
+            <span class="text-green-400 mt-0.5">✓</span>
+            Soporte prioritario
+          </li>
+        </ul>
+
+        <button
+          (click)="elegirPlan('pro')"
+          [disabled]="cargandoPago !== ''"
+          class="w-full bg-white text-stone-900 py-3 rounded-xl font-medium hover:bg-stone-100 transition text-sm disabled:opacity-50"
+        >
+          {{ cargandoPago === 'pro' ? 'Redirigiendo…' : 'Suscribirse por 19€/mes' }}
+        </button>
+
+        <p class="text-xs text-stone-500 text-center mt-3">
+          Sin permanencia. Cancela cuando quieras.
+        </p>
+      </div>
+    </div>
+
+    <!-- FAQ rápido -->
+    <div class="max-w-2xl mx-auto mt-16 space-y-6">
+      <h2 class="text-2xl font-serif text-stone-900 text-center mb-8">Preguntas frecuentes</h2>
+
+      <div class="bg-white rounded-2xl border border-stone-200 p-6">
+        <h3 class="font-medium text-stone-900 mb-2">¿Necesito descargar una app?</h3>
+        <p class="text-sm text-stone-500">No. Todo funciona desde el navegador del móvil. Tus invitados solo necesitan escanear el QR.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-stone-200 p-6">
+        <h3 class="font-medium text-stone-900 mb-2">¿Puedo cancelar el Plan Pro cuando quiera?</h3>
+        <p class="text-sm text-stone-500">Sí, sin permanencia ni penalización. Cancelas cuando quieras desde tu panel.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-stone-200 p-6">
+        <h3 class="font-medium text-stone-900 mb-2">¿Qué pasa con mis fotos si cancelo?</h3>
+        <p class="text-sm text-stone-500">Tienes 30 días para descargar tus fotos en ZIP antes de que se eliminen.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-stone-200 p-6">
+        <h3 class="font-medium text-stone-900 mb-2">¿Qué es el white label?</h3>
+        <p class="text-sm text-stone-500">Tu logo aparece en la galería que ven tus invitados en lugar del logo de Recuerda tu Día. Ideal para fotógrafos y wedding planners que quieren mantener su marca.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-stone-200 mt-16 py-8">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+      <p class="text-xs text-stone-400">
+        © 2026 Recuerda tu Día · <a routerLink="/" class="hover:text-stone-600 transition">Inicio</a>
+      </p>
+    </div>
+  </footer>
+</main>

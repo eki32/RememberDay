@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard, adminGuard } from './guards/auth.guard';
 import { NotFoundComponent } from './not-found/not-found';
+import { PreciosComponent } from './pages/precios/precios';
+import { PagoExitosoComponent } from './pages/pagoexitoso/pagoexitoso';
 
 export const routes: Routes = [
   {
@@ -55,6 +57,16 @@ export const routes: Routes = [
         (m) => m.PanelEventoComponent
       ),
   },
+
+  {
+  path: 'precios',
+  component: PreciosComponent,
+},
+{
+  path: 'pago-exitoso',
+  component: PagoExitosoComponent,
+},
+
   {
   path: '**',
   component: NotFoundComponent,
