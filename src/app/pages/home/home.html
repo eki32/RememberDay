@@ -1,18 +1,25 @@
-<main class="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100 px-6 py-12">
+<main
+  class="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 to-stone-100 px-6 py-12"
+>
   <div class="max-w-lg w-full text-center">
- <div class="flex justify-center mb-12">
-  <img src="imagenLogo.png" alt="Recuerda tu Día" class="h-64 w-auto rounded-full object-cover" />
-</div>
-  <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif text-stone-900 mb-4 leading-tight">
-  El álbum compartido<br />
-  <span class="text-stone-500">para los días</span><br />
-  que no quieres olvidar.
-</h1>
-<p class="text-stone-600 text-sm sm:text-base mb-10 leading-relaxed max-w-md mx-auto">
-  Tus invitados escanean un QR, suben sus fotos y vídeos, y todos los recuerdos quedan en un solo álbum compartido.
-</p>
+    <div class="flex justify-center mb-12">
+      <img
+        src="imagenLogo.png"
+        alt="Recuerda tu Día"
+        class="h-64 w-auto rounded-full object-cover"
+      />
+    </div>
+    <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif text-stone-900 mb-4 leading-tight">
+      El álbum compartido<br />
+      <span class="text-stone-500">para los días</span><br />
+      que no quieres olvidar.
+    </h1>
+    <p class="text-stone-600 text-sm sm:text-base mb-10 leading-relaxed max-w-md mx-auto">
+      Tus invitados escanean un QR, suben sus fotos y vídeos, y todos los recuerdos quedan en un
+      solo álbum compartido.
+    </p>
 
-  <!-- CTAs principales -->
+    <!-- CTAs principales -->
     <div class="flex flex-col sm:flex-row gap-3 justify-center mb-8">
       <a
         routerLink="/solicitar"
@@ -20,7 +27,7 @@
       >
         Solicitar acceso
       </a>
-    <a  
+      <a
         routerLink="/login"
         class="bg-white text-stone-700 px-6 py-3.5 rounded-xl font-medium hover:bg-stone-50 border border-stone-300 transition"
       >
@@ -32,12 +39,12 @@
     <div class="text-sm text-stone-500 border-t border-stone-200 pt-6 mt-2">
       <p class="font-medium text-stone-600 mb-1">¿Eres invitado a un evento?</p>
       <p>No necesitas cuenta — escanea el QR que te dio el organizador.</p>
+      <div class="text-center mt-8">
+        <a routerLink="/precios" class="text-sm text-stone-400 hover:text-stone-600 transition">
+          Ver precios →
+        </a>
+      </div>
     </div>
   </div>
   <!-- Añade antes del cierre de </main> -->
-<div class="text-center mt-8">
-  <a routerLink="/precios" class="text-sm text-stone-400 hover:text-stone-600 transition">
-    Ver precios →
-  </a>
-</div>
 </main>
