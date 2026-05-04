@@ -55,17 +55,18 @@ export class PanelComponent implements OnInit {
     this.mostrandoFormulario = false;
   }
 
-  async crearEvento() {
+async crearEvento() {
     if (!this.nuevoTitulo.trim()) return;
 
     this.creando = true;
     this.cdr.detectChanges();
 
-    const evento = await this.supabase.crearEvento({
-      titulo: this.nuevoTitulo,
-      fecha: this.nuevaFecha,
-      lugar: this.nuevoLugar,
-    });
+    const evento = await this.supabase.crearEvento(
+      this.nuevoTitulo,
+      this.nuevaFecha,
+      this.nuevoLugar,
+      'gratuito' // el servicio lo sobreescribe a 'pro' si eres admin
+    );
 
     this.creando = false;
 

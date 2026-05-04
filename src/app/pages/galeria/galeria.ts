@@ -31,6 +31,8 @@ export class GaleriaComponent implements OnInit, OnDestroy {
   fotos: FotoConUrl[] = [];
   cargando = true;
   subiendo = false;
+  eventoExpirado = false;
+  eventoLimiteFotos = false;
   progresoSubida = { hechas: 0, total: 0 };
   nombreInvitado: string | null = null;
   miDeviceId = '';
@@ -90,6 +92,17 @@ export class GaleriaComponent implements OnInit, OnDestroy {
     this.evento = await this.supabase.getEventoPorSlug(this.slug);
 
     if (this.evento) {
+      // Verificar expiración (solo plan gratuito)
+      if (this.evento.expira_en) {
+        this.eventoExpirado = new Date(this.evento.expira_en) < new Date();
+      }
+
+      // Aviso si está cerca del límite (plan gratuito, 24+ fotos = 80%)
+      if (this.evento.plan === 'gratuito' && !this.eventoExpirado) {
+        const fotosActuales = await this.supabase.getFotosDeEvento(this.evento.id);
+        this.eventoLimiteFotos = fotosActuales.length >= 24;
+      }
+
       // Cargar el logo del organizador (white label)
       if (this.evento.organizador_id) {
         const perfil = await this.supabase.getPerfilOrganizador(

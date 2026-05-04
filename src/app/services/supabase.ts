@@ -8,10 +8,13 @@ export interface Evento {
   id: string;
   slug: string;
   titulo: string;
-  fecha: string | null;
-  lugar: string | null;
-  organizador_id: string | null;
+  fecha: string;
+  lugar: string;
+  organizador_id: string;
   creado_en: string;
+  plan: 'gratuito' | 'evento_unico' | 'pro';
+  expira_en: string | null;
+  stripe_session_id: string | null;
 }
 
 export interface Foto {
@@ -159,6 +162,52 @@ export class SupabaseService {
         ok: false,
         motivo: 'La foto es demasiado grande (máx. 30 MB).',
       };
+    }
+
+    // Verificar límite de fotos para plan gratuito
+    const { data: eventoActual } = await this.supabase
+      .from('eventos')
+      .select('plan, expira_en, organizador_id')
+      .eq('id', eventoId)
+      .maybeSingle();
+
+    if (eventoActual) {
+      // Verificar si el organizador es admin (sin límites)
+      const { data: perfilOrg } = await this.supabase
+        .from('perfiles')
+        .select('is_admin')
+        .eq('id', eventoActual.organizador_id)
+        .maybeSingle();
+
+      const esAdmin = perfilOrg?.is_admin ?? false;
+
+      if (!esAdmin) {
+        // Verificar expiración
+        if (eventoActual.expira_en) {
+          const expirado = new Date(eventoActual.expira_en) < new Date();
+          if (expirado) {
+            return {
+              ok: false,
+              motivo: 'Este álbum ha expirado. El organizador debe actualizar el plan.',
+            };
+          }
+        }
+
+        // Verificar límite de fotos en plan gratuito
+        if (eventoActual.plan === 'gratuito') {
+          const { count } = await this.supabase
+            .from('fotos')
+            .select('id', { count: 'exact', head: true })
+            .eq('evento_id', eventoId);
+
+          if ((count ?? 0) >= 30) {
+            return {
+              ok: false,
+              motivo: 'Este álbum ha alcanzado el límite de 30 fotos del plan gratuito. Pide al organizador que actualice el plan.',
+            };
+          }
+        }
+      }
     }
 
     // 4. Si es HEIC, convertir primero a JPEG
@@ -387,30 +436,42 @@ export class SupabaseService {
   /**
    * Crear un evento nuevo. Genera el slug automáticamente.
    */
-  async crearEvento(datos: {
-    titulo: string;
-    fecha: string;
-    lugar: string;
-  }): Promise<Evento | null> {
-    const user = await this.getUsuarioActual();
-    if (!user) return null;
+async crearEvento(
+    titulo: string,
+    fecha: string,
+    lugar: string,
+    plan: 'gratuito' | 'evento_unico' | 'pro' = 'gratuito'
+  ): Promise<Evento | null> {
+    const usuario = await this.getUsuarioActual();
+    if (!usuario) return null;
 
-    const slug = this.generarSlug(datos.titulo);
+    // Verificar si es admin → siempre plan pro
+    const perfil = await this.getMiPerfil();
+    const planFinal = perfil?.is_admin ? 'pro' : plan;
+
+    // Calcular expiración para plan gratuito
+    const expiraEn = planFinal === 'gratuito'
+      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+
+    const slug = this.generarSlug(titulo);
 
     const { data, error } = await this.supabase
       .from('eventos')
       .insert({
+        titulo,
+        fecha,
+        lugar,
         slug,
-        titulo: datos.titulo,
-        fecha: datos.fecha,
-        lugar: datos.lugar,
-        organizador_id: user.id,
+        organizador_id: usuario.id,
+        plan: planFinal,
+        expira_en: expiraEn,
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error al crear evento:', error);
+      console.error('Error creando evento:', error);
       return null;
     }
     return data;
