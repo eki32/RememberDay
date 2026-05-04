@@ -445,9 +445,9 @@ async crearEvento(
     const usuario = await this.getUsuarioActual();
     if (!usuario) return null;
 
-    // Verificar si es admin → siempre plan pro
-    const perfil = await this.getMiPerfil();
-    const planFinal = perfil?.is_admin ? 'pro' : plan;
+    // Verificar si es admin directamente (más fiable que getMiPerfil)
+    const esAdmin = await this.esAdmin();
+    const planFinal = esAdmin ? 'pro' : plan;
 
     // Calcular expiración para plan gratuito
     const expiraEn = planFinal === 'gratuito'
@@ -476,7 +476,6 @@ async crearEvento(
     }
     return data;
   }
-
   /**
    * Convierte un texto en un slug válido para URL.
    * "Boda de Juan & María 2024" → "boda-de-juan-maria-2024"
