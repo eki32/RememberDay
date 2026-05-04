@@ -164,7 +164,7 @@ export class SupabaseService {
       };
     }
 
-    // Verificar límite de fotos para plan gratuito
+// Verificar límite de fotos para plan gratuito
     const { data: eventoActual } = await this.supabase
       .from('eventos')
       .select('plan, expira_en, organizador_id')
@@ -172,40 +172,30 @@ export class SupabaseService {
       .maybeSingle();
 
     if (eventoActual) {
-      // Verificar si el organizador es admin (sin límites)
-      const { data: perfilOrg } = await this.supabase
-        .from('perfiles')
-        .select('is_admin')
-        .eq('id', eventoActual.organizador_id)
-        .maybeSingle();
-
-      const esAdmin = perfilOrg?.is_admin ?? false;
-
-      if (!esAdmin) {
-        // Verificar expiración
-        if (eventoActual.expira_en) {
-          const expirado = new Date(eventoActual.expira_en) < new Date();
-          if (expirado) {
-            return {
-              ok: false,
-              motivo: 'Este álbum ha expirado. El organizador debe actualizar el plan.',
-            };
-          }
+      // Verificar expiración
+      if (eventoActual.expira_en) {
+        const expirado = new Date(eventoActual.expira_en) < new Date();
+        if (expirado) {
+          return {
+            ok: false,
+            motivo: 'Este álbum ha expirado. El organizador debe actualizar el plan.',
+          };
         }
+      }
 
-        // Verificar límite de fotos en plan gratuito
-        if (eventoActual.plan === 'gratuito') {
-          const { count } = await this.supabase
-            .from('fotos')
-            .select('id', { count: 'exact', head: true })
-            .eq('evento_id', eventoId);
+      // Verificar límite de fotos en plan gratuito
+      // (el admin siempre tiene plan 'pro' así que nunca entra aquí)
+      if (eventoActual.plan === 'gratuito') {
+        const { count } = await this.supabase
+          .from('fotos')
+          .select('id', { count: 'exact', head: true })
+          .eq('evento_id', eventoId);
 
-          if ((count ?? 0) >= 30) {
-            return {
-              ok: false,
-              motivo: 'Este álbum ha alcanzado el límite de 30 fotos del plan gratuito. Pide al organizador que actualice el plan.',
-            };
-          }
+        if ((count ?? 0) >= 30) {
+          return {
+            ok: false,
+            motivo: 'Este álbum ha alcanzado el límite de 30 fotos del plan gratuito. Pide al organizador que actualice el plan.',
+          };
         }
       }
     }

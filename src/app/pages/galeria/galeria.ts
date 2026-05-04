@@ -85,11 +85,12 @@ export class GaleriaComponent implements OnInit, OnDestroy {
     else if (event.key === 'Escape') this.cerrarLightbox();
   }
 
-  async ngOnInit() {
+async ngOnInit() {
     this.nombreInvitado = sessionStorage.getItem('invitado-nombre');
     this.miDeviceId = this.supabase.getDeviceId();
 
     this.evento = await this.supabase.getEventoPorSlug(this.slug);
+    console.log('Evento cargado:', this.evento); // ← AQUÍ, justo después
 
     if (this.evento) {
       // Verificar expiración (solo plan gratuito)
@@ -117,8 +118,6 @@ export class GaleriaComponent implements OnInit, OnDestroy {
     this.cargando = false;
     this.cdr.detectChanges();
 
-    // Refrescar la UI cada 30 segundos para que los botones de borrar
-    // desaparezcan automáticamente al pasar los 5 minutos
     this.intervalo = setInterval(() => this.cdr.detectChanges(), 30_000);
   }
 
