@@ -207,4 +207,50 @@ export class PanelEventoComponent implements OnInit {
       this.cdr.detectChanges();
     }
   }
+
+  /**
+   * Compartir por WhatsApp en grupo
+   */
+  compartirWhatsAppGrupo() {
+    if (!this.evento) return;
+
+    const mensaje = `📸 *${this.evento.titulo}*
+
+¡Hola a todos! Para guardar todos los recuerdos de hoy juntos, hemos creado un álbum compartido.
+
+👇 *Cómo subir tus fotos (muy fácil):*
+1️⃣ Abre este enlace: ${this.urlInvitado}
+2️⃣ Escribe tu nombre (opcional)
+3️⃣ Pulsa "Subir fotos" y elige las que quieras
+
+📱 Funciona desde el móvil, sin descargar ninguna app.
+
+¡Gracias a todos y que disfrutéis el día! 🎉`;
+
+    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+  }
+
+  /**
+   * Compartir por WhatsApp uno a uno
+   */
+  compartirWhatsAppIndividual() {
+    if (!this.evento) return;
+
+    const mensaje = `Hola 👋
+
+Te comparto el enlace del álbum de fotos de *${this.evento.titulo}* para que puedas subir tus fotos del día.
+
+👉 ${this.urlInvitado}
+
+Es muy fácil:
+- Abre el enlace desde tu móvil
+- Escribe tu nombre si quieres
+- Pulsa el botón para subir tus fotos
+
+No hace falta descargar ninguna app 😊 ¡Gracias!`;
+
+    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+  }
 }
