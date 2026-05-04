@@ -3,8 +3,6 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
 import { ToastService } from './toast';
 
-
-
 export interface Evento {
   id: string;
   slug: string;
@@ -61,10 +59,7 @@ export class SupabaseService {
   private toast = inject(ToastService);
 
   constructor() {
-    this.supabase = createClient(
-      environment.supabaseUrl,
-      environment.supabaseAnonKey
-    );
+    this.supabase = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
     this.deviceId = this.obtenerOCrearDeviceId();
   }
 
@@ -89,7 +84,7 @@ export class SupabaseService {
   getDeviceId(): string {
     return this.deviceId;
   }
-  
+
   /**
    * Buscar un evento por su slug (el que aparece en la URL).
    */
@@ -124,7 +119,7 @@ export class SupabaseService {
     return data ?? [];
   }
 
-/**
+  /**
    * Sube un archivo (foto o vídeo) al evento.
    * - HEIC (iPhone): se convierte automáticamente a JPEG
    * - Imágenes: se comprimen antes de subir
@@ -133,7 +128,7 @@ export class SupabaseService {
   async subirArchivo(
     eventoId: string,
     archivo: File,
-    nombreInvitado: string | null
+    nombreInvitado: string | null,
   ): Promise<{ ok: boolean; motivo?: string; foto?: Foto }> {
     // 1. Detectar HEIC (iPhone). A veces viene como type='' por bug de Safari
     const nombreLower = archivo.name.toLowerCase();
@@ -153,10 +148,10 @@ export class SupabaseService {
 
     // 3. Validar tamaño según tipo
     const MB = 1024 * 1024;
-    if (esVideo && archivo.size > 50 * MB) {
+    if (esVideo && archivo.size > 20 * MB) {
       return {
         ok: false,
-        motivo: 'El vídeo es demasiado grande (máx. 50 MB).',
+        motivo: 'El vídeo es demasiado grande (máx. 20 MB). Graba un clip más corto.',
       };
     }
     if (esImagen && archivo.size > 30 * MB) {
@@ -166,7 +161,7 @@ export class SupabaseService {
       };
     }
 
-// Verificar límite de fotos para plan gratuito
+    // Verificar límite de fotos para plan gratuito
     const { data: eventoActual } = await this.supabase
       .from('eventos')
       .select('plan, expira_en, organizador_id')
@@ -196,7 +191,8 @@ export class SupabaseService {
         if ((count ?? 0) >= 30) {
           return {
             ok: false,
-            motivo: 'Este álbum ha alcanzado el límite de 30 fotos del plan gratuito. Pide al organizador que actualice el plan.',
+            motivo:
+              'Este álbum ha alcanzado el límite de 30 fotos del plan gratuito. Pide al organizador que actualice el plan.',
           };
         }
       }
@@ -230,8 +226,7 @@ export class SupabaseService {
     // 5. Comprimir si es imagen (también las HEIC ya convertidas)
     if (esImagen) {
       try {
-        const imageCompression = (await import('browser-image-compression'))
-          .default;
+        const imageCompression = (await import('browser-image-compression')).default;
         archivoFinal = await imageCompression(archivoFinal, {
           maxSizeMB: 0.5,
           maxWidthOrHeight: 2000,
@@ -245,9 +240,7 @@ export class SupabaseService {
 
     // 6. Generar nombre único
     const ext = archivoFinal.name.split('.').pop()?.toLowerCase() ?? 'bin';
-    const nombreUnico = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2, 9)}.${ext}`;
+    const nombreUnico = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`;
     const storagePath = `${eventoId}/${nombreUnico}`;
 
     // 7. Subir al Storage
@@ -290,13 +283,11 @@ export class SupabaseService {
    * Obtener la URL pública para mostrar una foto/vídeo en el navegador.
    */
   getUrlPublica(storagePath: string): string {
-    const { data } = this.supabase.storage
-      .from(this.BUCKET)
-      .getPublicUrl(storagePath);
+    const { data } = this.supabase.storage.from(this.BUCKET).getPublicUrl(storagePath);
     return data.publicUrl;
   }
 
-/**
+  /**
    * Suscribirse a cambios de fotos en tiempo real (nuevas y borradas).
    * Devuelve un canal — guárdalo para poder desuscribirte después.
    */
@@ -305,7 +296,7 @@ export class SupabaseService {
     callbacks: {
       onNueva: (foto: Foto) => void;
       onBorrada: (fotoId: string) => void;
-    }
+    },
   ) {
     const canal = this.supabase
       .channel(`fotos:${eventoId}`)
@@ -318,9 +309,9 @@ export class SupabaseService {
           filter: `evento_id=eq.${eventoId}`,
         },
         (payload) => {
-          console.log('📸 Nueva foto:', payload.new);
+         
           callbacks.onNueva(payload.new as Foto);
-        }
+        },
       )
       .on(
         'postgres_changes',
@@ -331,12 +322,12 @@ export class SupabaseService {
           filter: `evento_id=eq.${eventoId}`,
         },
         (payload) => {
-          console.log('🗑️ Foto borrada:', payload.old);
+         
           callbacks.onBorrada((payload.old as Foto).id);
-        }
+        },
       )
       .subscribe((status) => {
-        console.log('🔌 Estado del canal:', status);
+       
       });
 
     return canal;
@@ -428,11 +419,11 @@ export class SupabaseService {
   /**
    * Crear un evento nuevo. Genera el slug automáticamente.
    */
-async crearEvento(
+  async crearEvento(
     titulo: string,
     fecha: string,
     lugar: string,
-    plan: 'gratuito' | 'evento_unico' | 'pro' = 'gratuito'
+    plan: 'gratuito' | 'evento_unico' | 'pro' = 'gratuito',
   ): Promise<Evento | null> {
     const usuario = await this.getUsuarioActual();
     if (!usuario) return null;
@@ -442,9 +433,10 @@ async crearEvento(
     const planFinal = esAdmin ? 'pro' : plan;
 
     // Calcular expiración para plan gratuito
-    const expiraEn = planFinal === 'gratuito'
-      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      : null;
+    const expiraEn =
+      planFinal === 'gratuito'
+        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        : null;
 
     const slug = this.generarSlug(titulo);
 
@@ -473,16 +465,19 @@ async crearEvento(
    * "Boda de Juan & María 2024" → "boda-de-juan-maria-2024"
    */
   private generarSlug(texto: string): string {
-    return texto
-      .toLowerCase()
-      .normalize('NFD') // descompone tildes
-      .replace(/[\u0300-\u036f]/g, '') // quita marcas de tildes
-      .replace(/&/g, 'y')
-      .replace(/[^a-z0-9\s-]/g, '') // quita símbolos
-      .trim()
-      .replace(/\s+/g, '-') // espacios → guiones
-      .replace(/-+/g, '-') // varios guiones → uno
-      + '-' + Math.random().toString(36).slice(2, 6); // sufijo aleatorio para evitar colisiones
+    return (
+      texto
+        .toLowerCase()
+        .normalize('NFD') // descompone tildes
+        .replace(/[\u0300-\u036f]/g, '') // quita marcas de tildes
+        .replace(/&/g, 'y')
+        .replace(/[^a-z0-9\s-]/g, '') // quita símbolos
+        .trim()
+        .replace(/\s+/g, '-') // espacios → guiones
+        .replace(/-+/g, '-') + // varios guiones → uno
+      '-' +
+      Math.random().toString(36).slice(2, 6)
+    ); // sufijo aleatorio para evitar colisiones
   }
 
   /**
@@ -520,10 +515,7 @@ async crearEvento(
     }
 
     // Luego borrar el evento (las filas de fotos caen en cascada por la FK)
-    const { error } = await this.supabase
-      .from('eventos')
-      .delete()
-      .eq('id', eventoId);
+    const { error } = await this.supabase.from('eventos').delete().eq('id', eventoId);
 
     if (error) {
       console.error('Error al eliminar evento:', error);
@@ -537,9 +529,7 @@ async crearEvento(
    * Devuelve el Blob para meterlo en el ZIP.
    */
   async descargarArchivo(storagePath: string): Promise<Blob | null> {
-    const { data, error } = await this.supabase.storage
-      .from(this.BUCKET)
-      .download(storagePath);
+    const { data, error } = await this.supabase.storage.from(this.BUCKET).download(storagePath);
 
     if (error) {
       console.error('Error al descargar archivo:', error);
@@ -578,10 +568,7 @@ async crearEvento(
     }
 
     // 4. Borrar la fila de la BD
-    const { error: errorBD } = await this.supabase
-      .from('fotos')
-      .delete()
-      .eq('id', foto.id);
+    const { error: errorBD } = await this.supabase.from('fotos').delete().eq('id', foto.id);
 
     if (errorBD) {
       console.error('Error al borrar de la BD:', errorBD);
@@ -606,9 +593,7 @@ async crearEvento(
     fecha_evento: string | null;
     mensaje: string | null;
   }): Promise<boolean> {
-    const { error } = await this.supabase
-      .from('solicitudes')
-      .insert(datos);
+    const { error } = await this.supabase.from('solicitudes').insert(datos);
 
     if (error) {
       console.error('Error al crear solicitud:', error);
@@ -659,10 +644,7 @@ async crearEvento(
   /**
    * Cambiar el estado de una solicitud.
    */
-  async actualizarEstadoSolicitud(
-    id: string,
-    estado: Solicitud['estado']
-  ): Promise<boolean> {
+  async actualizarEstadoSolicitud(id: string, estado: Solicitud['estado']): Promise<boolean> {
     const { error } = await this.supabase
       .from('solicitudes')
       .update({ estado, actualizado_en: new Date().toISOString() })
@@ -702,20 +684,17 @@ async crearEvento(
    * - Envía email con credenciales
    * - Actualiza la solicitud a 'cuenta_creada'
    */
-  async crearCuentaParaSolicitud(
-    solicitudId: string
-  ): Promise<{ ok: boolean; error?: string }> {
-    const { data: { session } } = await this.supabase.auth.getSession();
+  async crearCuentaParaSolicitud(solicitudId: string): Promise<{ ok: boolean; error?: string }> {
+    const {
+      data: { session },
+    } = await this.supabase.auth.getSession();
     if (!session) {
       return { ok: false, error: 'No hay sesión activa' };
     }
 
-    const { data, error } = await this.supabase.functions.invoke(
-      'crear-cuenta-cliente',
-      {
-        body: { solicitudId },
-      }
-    );
+    const { data, error } = await this.supabase.functions.invoke('crear-cuenta-cliente', {
+      body: { solicitudId },
+    });
 
     if (error) {
       console.error('Error al invocar la function:', error);
@@ -796,9 +775,7 @@ async crearEvento(
     }
 
     // Obtener URL pública (con cache-buster para evitar caché del navegador)
-    const { data } = this.supabase.storage
-      .from(this.BUCKET_LOGOS)
-      .getPublicUrl(path);
+    const { data } = this.supabase.storage.from(this.BUCKET_LOGOS).getPublicUrl(path);
 
     const urlConCacheBuster = `${data.publicUrl}?v=${Date.now()}`;
 
@@ -824,9 +801,7 @@ async crearEvento(
     if (!usuario) return false;
 
     // Borrar todos los archivos en la carpeta del usuario
-    const { data: archivos } = await this.supabase.storage
-      .from(this.BUCKET_LOGOS)
-      .list(usuario.id);
+    const { data: archivos } = await this.supabase.storage.from(this.BUCKET_LOGOS).list(usuario.id);
 
     if (archivos && archivos.length > 0) {
       const paths = archivos.map((f) => `${usuario.id}/${f.name}`);
@@ -845,23 +820,16 @@ async crearEvento(
    * Crear sesión de pago de Stripe.
    * Redirige al usuario a la página de pago de Stripe.
    */
-async iniciarPago(
-    priceId: string,
-    modo: 'payment' | 'subscription'
-  ): Promise<void> {
+  async iniciarPago(priceId: string, modo: 'payment' | 'subscription'): Promise<void> {
     try {
-      const { data, error } = await this.supabase.functions.invoke(
-        'crear-sesion-pago',
-        {
-          body: { priceId, modo },
-          headers: {
-            'Authorization': `Bearer ${environment.supabaseAnonKey}`,
-          },
-        }
-      );
+      const { data, error } = await this.supabase.functions.invoke('crear-sesion-pago', {
+        body: { priceId, modo },
+        headers: {
+          Authorization: `Bearer ${environment.supabaseAnonKey}`,
+        },
+      });
 
-      console.log('Data:', data);
-      console.log('Error:', error);
+    
 
       if (error) {
         console.error('Error función:', error);

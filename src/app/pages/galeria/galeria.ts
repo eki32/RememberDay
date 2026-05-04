@@ -92,7 +92,7 @@ async ngOnInit() {
     this.miDeviceId = this.supabase.getDeviceId();
 
     this.evento = await this.supabase.getEventoPorSlug(this.slug);
-    console.log('Evento cargado:', this.evento); // ← AQUÍ, justo después
+
 
     if (this.evento) {
       // Verificar expiración (solo plan gratuito)
