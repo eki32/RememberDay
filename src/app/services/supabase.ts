@@ -428,22 +428,38 @@ export class SupabaseService {
     fecha: string,
     lugar: string,
     plan: 'gratuito' | 'evento_unico' | 'pro' = 'gratuito',
-  ): Promise<Evento | null> {
+  ): Promise<{ evento: Evento | null; motivo?: string }> {
     const usuario = await this.getUsuarioActual();
-    if (!usuario) return null;
+    if (!usuario) return { evento: null, motivo: 'No hay sesión activa.' };
 
     // Determinar plan final según perfil del usuario
     const perfil = await this.getMiPerfil();
     let planFinal: 'gratuito' | 'evento_unico' | 'pro';
 
     if (perfil?.is_admin) {
-      planFinal = 'pro'; // admin siempre pro
+      planFinal = 'pro';
     } else if (perfil?.plan === 'pro') {
-      planFinal = 'pro'; // suscripción pro activa
+      planFinal = 'pro';
     } else if (perfil?.plan === 'evento_unico') {
-      planFinal = 'evento_unico'; // pagó evento único
+      planFinal = 'evento_unico';
     } else {
-      planFinal = 'gratuito'; // por defecto
+      planFinal = 'gratuito';
+    }
+
+    // Verificar límite de eventos según plan
+    if (planFinal === 'evento_unico' || planFinal === 'gratuito') {
+      const limite = planFinal === 'evento_unico' ? 1 : 1;
+      const { count } = await this.supabase
+        .from('eventos')
+        .select('id', { count: 'exact', head: true })
+        .eq('organizador_id', usuario.id);
+
+      if ((count ?? 0) >= limite) {
+        const motivo = planFinal === 'evento_unico'
+          ? 'El plan Evento Único solo permite 1 evento. Actualiza al Plan Pro para crear eventos ilimitados.'
+          : 'El plan gratuito solo permite 1 evento de prueba. Actualiza tu plan para crear más.';
+        return { evento: null, motivo };
+      }
     }
 
     // Calcular expiración solo para plan gratuito
@@ -470,9 +486,9 @@ export class SupabaseService {
 
     if (error) {
       console.error('Error creando evento:', error);
-      return null;
+      return { evento: null, motivo: 'No se pudo crear el evento.' };
     }
-    return data;
+    return { evento: data };
   }
   /**
    * Convierte un texto en un slug válido para URL.

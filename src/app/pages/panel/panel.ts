@@ -57,32 +57,41 @@ export class PanelComponent implements OnInit {
     this.mostrandoFormulario = false;
   }
 
-  async crearEvento() {
+async crearEvento() {
     if (!this.nuevoTitulo.trim()) return;
 
     this.creando = true;
     this.cdr.detectChanges();
 
-    const evento = await this.supabase.crearEvento(
+    const resultado = await this.supabase.crearEvento(
       this.nuevoTitulo,
       this.nuevaFecha,
       this.nuevoLugar,
-      'gratuito', // el servicio lo sobreescribe a 'pro' si eres admin
+      'gratuito'
     );
 
     this.creando = false;
 
-    if (evento) {
+    if (resultado.evento) {
       this.cerrarFormulario();
       await this.cargarEventos();
     } else {
-      this.toast.error('No se pudo crear el evento. Intenta de nuevo.');
+      this.toast.error(resultado.motivo ?? 'No se pudo crear el evento.');
+      this.cdr.detectChanges();
     }
   }
 
   async cerrarSesion() {
     await this.supabase.cerrarSesion();
     this.router.navigate(['/login']);
+  }
+
+   get puedeCrearMasEventos(): boolean {
+    if (!this.miPerfil) return false;
+    if (this.miPerfil.is_admin || this.miPerfil.plan === 'pro') return true;
+    if (this.miPerfil.plan === 'evento_unico') return this.eventos.length < 1;
+    if (this.miPerfil.plan === 'gratuito') return this.eventos.length < 1;
+    return false;
   }
 
   abrirBranding() {
