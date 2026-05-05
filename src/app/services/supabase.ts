@@ -464,9 +464,11 @@ export class SupabaseService {
 
     // Calcular expiración solo para plan gratuito
     const expiraEn =
-      planFinal === 'gratuito'
-        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        : null;
+  planFinal === 'gratuito'
+    ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    : planFinal === 'evento_unico'
+    ? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString() // 6 meses
+    : null; // pro → sin expiración
 
     const slug = this.generarSlug(titulo);
 
