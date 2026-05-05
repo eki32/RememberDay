@@ -18,6 +18,45 @@
   } @else {
     <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
+      <!-- Banner plan gratuito -->
+ <!-- Banner plan gratuito -->
+@if (evento.plan === 'gratuito') {
+  @if (evento.expira_en && estaExpirado()) {
+    <!-- Expirado -->
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-sm font-medium text-red-900">⚠️ Este evento ha expirado</p>
+        <p class="text-xs text-red-700 mt-0.5">Los invitados ya no pueden subir fotos. Mejora tu plan para reactivarlo.</p>
+      </div>
+      <a
+        routerLink="/precios"
+        class="flex-shrink-0 bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-red-700 transition"
+      >
+        Reactivar →
+      </a>
+    </div>
+  } @else {
+    <!-- Activo pero gratuito -->
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-sm font-medium text-amber-900">Plan gratuito</p>
+        <p class="text-xs text-amber-700 mt-0.5">
+          Límite de 30 fotos · Sin ZIP ni cartel
+          @if (evento.expira_en) {
+            · Expira el {{ evento.expira_en | date:'d MMM yyyy':'':'es' }}
+          }
+        </p>
+      </div>
+      <a
+        routerLink="/precios"
+        class="flex-shrink-0 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-amber-700 transition"
+      >
+        Mejorar plan →
+      </a>
+    </div>
+  }
+}
+
       <!-- Cabecera del evento -->
       <div class="mb-8">
         <h1 class="text-3xl sm:text-4xl font-serif text-stone-900 mb-2">
@@ -62,15 +101,27 @@
               >
                 Copiar URL
               </button>
+
+              <!-- Cartel PDF — bloqueado en gratuito -->
               <button
                 (click)="descargarCartel()"
-                [disabled]="generandoCartel"
-                class="bg-stone-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-stone-600 transition text-sm disabled:opacity-50"
+                [disabled]="generandoCartel || evento.plan === 'gratuito'"
+                [title]="evento.plan === 'gratuito' ? 'Disponible en planes de pago' : ''"
+                class="px-4 py-2 rounded-lg font-medium transition text-sm disabled:cursor-not-allowed"
+                [ngClass]="evento.plan === 'gratuito'
+                  ? 'bg-stone-100 text-stone-400 border border-stone-200'
+                  : 'bg-stone-700 text-white hover:bg-stone-600 disabled:opacity-50'"
               >
-                {{ generandoCartel ? 'Generando…' : '🖨️ Descargar cartel A6' }}
+                @if (evento.plan === 'gratuito') {
+                  🔒 Cartel A6 (plan de pago)
+                } @else {
+                  {{ generandoCartel ? 'Generando…' : '🖨️ Descargar cartel A6' }}
+                }
               </button>
+
               <!-- Separador -->
               <div class="w-full border-t border-stone-100 mt-1 mb-1"></div>
+
               <!-- WhatsApp grupo -->
               <button
                 (click)="compartirWhatsAppGrupo()"
@@ -92,7 +143,6 @@
                 </svg>
                 Enviar uno a uno
               </button>
-
             </div>
           </div>
         </div>
@@ -108,10 +158,16 @@
           @if (fotos.length > 0) {
             <button
               (click)="descargarTodasLasFotos()"
-              [disabled]="descargando"
-              class="bg-stone-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-stone-800 transition text-sm disabled:opacity-50"
+              [disabled]="descargando || evento.plan === 'gratuito'"
+              [title]="evento.plan === 'gratuito' ? 'Disponible en planes de pago' : ''"
+              class="px-4 py-2 rounded-lg font-medium transition text-sm disabled:cursor-not-allowed"
+              [ngClass]="evento.plan === 'gratuito'
+                ? 'bg-stone-100 text-stone-400 border border-stone-200'
+                : 'bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50'"
             >
-              @if (descargando) {
+              @if (evento.plan === 'gratuito') {
+                🔒 ZIP (plan de pago)
+              } @else if (descargando) {
                 Descargando {{ progresoDescarga.hechas }}/{{ progresoDescarga.total }}…
               } @else {
                 Descargar todo (ZIP)
@@ -133,7 +189,7 @@
                 @if (foto.tipo === 'foto') {
                   <img [src]="foto.url" class="w-full h-full object-cover" loading="lazy" />
                 } @else {
-                  <video [src]="foto.url" class="w-full h-full object-cover" muted></video>
+                  <video [src]="foto.url" class="w-full h-full object-cover" muted preload="none"></video>
                   <div class="absolute inset-0 flex items-center justify-center bg-black/20">
                     <span class="text-white text-2xl">▶</span>
                   </div>
@@ -162,42 +218,22 @@
   }
 </main>
 
-<!-- =====================================================
-     CARTEL A6 OCULTO (solo se usa para generar el PDF)
-     Dimensiones A6: 105x148mm → a 96dpi ≈ 397x559px
-     ===================================================== -->
+<!-- CARTEL A6 OCULTO -->
 <div
   #cartelRef
-  style="display:none; width:397px; height:559px; background:#fafaf9; font-family: Georgia, serif; overflow:hidden; position:relative;"
+  style="display:none; width:397px; height:559px; background:#fafaf9; font-family: Georgia, serif; overflow:hidden; position:relative; border-radius:8px;"
 >
-  <!-- Borde decorativo exterior -->
   <div style="position:absolute; inset:10px; border:1px solid #d6d3d1; border-radius:8px; pointer-events:none;"></div>
-
-  <!-- Contenido centrado -->
   <div style="position:absolute; inset:10px; display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:28px 24px;">
-
-    <!-- Logo -->
     <div style="display:flex; flex-direction:column; align-items:center; gap:12px;">
       @if (logoOrganizador) {
-        <img
-          [src]="logoOrganizador"
-          alt="Logo"
-          style="height:72px; width:auto; border-radius:10px; object-fit:contain;"
-          crossorigin="anonymous"
-        />
+        <img [src]="logoOrganizador" alt="Logo" style="height:72px; width:auto; border-radius:10px; object-fit:contain;" crossorigin="anonymous" />
       } @else {
-        <img
-          src="/imagenLogo.png"
-          alt="Recuerda tu Día"
-          style="height:72px; width:auto; border-radius:10px; object-fit:contain;"
-          crossorigin="anonymous"
-        />
+        <img src="/imagenLogo.png" alt="Recuerda tu Día" style="height:72px; width:auto; border-radius:10px; object-fit:contain;" crossorigin="anonymous" />
       }
     </div>
-
-    <!-- Título del evento -->
     <div style="text-align:center;">
-      <p style="font-size:11px; color:#a8a29e; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; font-family: -apple-system, sans-serif;">
+      <p style="font-size:11px; color:#a8a29e; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; font-family:-apple-system, sans-serif;">
         Te invitamos a compartir
       </p>
       <h1 style="font-size:22px; color:#1c1917; font-family:Georgia, serif; line-height:1.3; margin:0;">
@@ -209,20 +245,11 @@
         </p>
       }
     </div>
-
-    <!-- QR -->
     <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
       <div style="background:white; padding:12px; border:1px solid #e7e5e4; border-radius:10px;">
-        <qrcode
-          [qrdata]="urlInvitado"
-          [width]="150"
-          [margin]="0"
-          [errorCorrectionLevel]="'M'"
-        ></qrcode>
+        <qrcode [qrdata]="urlInvitado" [width]="150" [margin]="0" [errorCorrectionLevel]="'M'"></qrcode>
       </div>
     </div>
-
-    <!-- Texto CTA -->
     <div style="text-align:center;">
       <p style="font-size:13px; color:#1c1917; font-weight:600; margin:0; font-family:-apple-system, sans-serif;">
         📸 Escanea y sube tus fotos
@@ -231,11 +258,8 @@
         Sin descargar ninguna app
       </p>
     </div>
-
-    <!-- URL en pequeño -->
     <p style="font-size:9px; color:#d6d3d1; font-family:monospace; word-break:break-all; text-align:center;">
       {{ urlInvitado }}
     </p>
-
   </div>
 </div>

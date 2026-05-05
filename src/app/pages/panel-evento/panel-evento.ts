@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { QRCodeComponent } from 'angularx-qrcode';
 import JSZip from 'jszip';
 import { SupabaseService, Evento, Foto } from '../../services/supabase';
 import { ToastService } from '../../services/toast';
+
 
 interface FotoConUrl extends Foto {
   url: string;
@@ -13,7 +14,7 @@ interface FotoConUrl extends Foto {
 @Component({
   selector: 'app-panel-evento',
   standalone: true,
-  imports: [CommonModule, RouterLink, QRCodeComponent],
+  imports: [CommonModule,DatePipe, RouterLink, QRCodeComponent],
   templateUrl: './panel-evento.html',
 })
 export class PanelEventoComponent implements OnInit {
@@ -99,6 +100,11 @@ export class PanelEventoComponent implements OnInit {
   async descargarCartel() {
     if (!this.evento) return;
 
+    if (this.evento.plan === 'gratuito') {
+    this.toast.error('El cartel imprimible no está disponible en el plan gratuito. Actualiza tu plan en /precios.');
+    return;
+  }
+
     this.generandoCartel = true;
     this.cdr.detectChanges();
 
@@ -155,6 +161,11 @@ export class PanelEventoComponent implements OnInit {
       this.toast.info('No hay fotos para descargar.');
       return;
     }
+
+    if (this.evento?.plan === 'gratuito') {
+    this.toast.error('La descarga ZIP no está disponible en el plan gratuito. Actualiza tu plan en /precios.');
+    return;
+  }
 
     this.descargando = true;
     this.progresoDescarga = { hechas: 0, total: this.fotos.length };
@@ -252,4 +263,9 @@ No hace falta descargar ninguna app. ¡Gracias!`;
     const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
   }
+
+  estaExpirado(): boolean {
+  if (!this.evento?.expira_en) return false;
+  return new Date(this.evento.expira_en) < new Date();
+}
 }
