@@ -59,20 +59,23 @@
           {{ eventos.length }} {{ eventos.length === 1 ? 'evento' : 'eventos' }}
         }
       </p>
-      @if (puedeCrearMasEventos) {
-        <button
-          (click)="abrirFormulario()"
-          class="bg-stone-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-stone-800 transition text-sm"
-        >
-          + Nuevo evento
-        </button>
-      } @else if (miPerfil?.plan !== 'pro') {
-        <a
-          routerLink="/precios"
-          class="bg-amber-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-700 transition text-sm"
-        >
-          Mejorar plan →
-        </a>
+
+      @if (perfilCargado) {
+        @if (puedeCrearMasEventos) {
+          <button
+            (click)="abrirFormulario()"
+            class="bg-stone-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-stone-800 transition text-sm"
+          >
+            + Nuevo evento
+          </button>
+        } @else if (miPerfil?.plan !== 'pro') {
+          <a
+            routerLink="/precios"
+            class="bg-amber-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-700 transition text-sm"
+          >
+            Mejorar plan →
+          </a>
+        }
       }
     </div>
 

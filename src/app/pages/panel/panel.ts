@@ -26,17 +26,19 @@ export class PanelComponent implements OnInit {
   nuevaFecha = '';
   nuevoLugar = '';
   esAdmin = false;
+  perfilCargado = false;
 
   // Branding
   miPerfil: any = null;
   subiendoLogo = false;
   mostrandoBranding = false;
 
-  async ngOnInit() {
-    this.esAdmin = await this.supabase.esAdmin();
-    this.miPerfil = await this.supabase.getMiPerfil();
-    await this.cargarEventos();
-  }
+async ngOnInit() {
+  this.esAdmin = await this.supabase.esAdmin();
+  this.miPerfil = await this.supabase.getMiPerfil();
+  this.perfilCargado = true; // ← AÑADE ESTO
+  await this.cargarEventos();
+}
 
   async cargarEventos() {
     this.cargando = true;
