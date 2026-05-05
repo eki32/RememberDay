@@ -6,5 +6,5 @@ export const environment = {
   // Añade dentro del objeto environment:
 stripePublishableKey: 'pk_live_51TTQGfHHS5HV3CjKO22EWh3mlykVcljgWtMtjCG7Tj1jetDXLy8xOb2dkfK50ORGuUQH1POIPqPAFSwFStnqotza00qEXv1h7n',
 stripePriceEventoUnico: 'price_1TTUbXHHS5HV3CjKwqge4xX9',
-stripePricePro: 'price_1TTUbZHHS5HV3CjKtAPueSdo',
+stripePricePro: 'price_1TTUbZHHS5HV3CjKtAPueSdo'
 };
