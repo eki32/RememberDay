@@ -27,7 +27,7 @@ export class PanelComponent implements OnInit {
   nuevoLugar = '';
   esAdmin = false;
 
-   // Branding
+  // Branding
   miPerfil: any = null;
   subiendoLogo = false;
   mostrandoBranding = false;
@@ -57,7 +57,7 @@ export class PanelComponent implements OnInit {
     this.mostrandoFormulario = false;
   }
 
-async crearEvento() {
+  async crearEvento() {
     if (!this.nuevoTitulo.trim()) return;
 
     this.creando = true;
@@ -67,7 +67,7 @@ async crearEvento() {
       this.nuevoTitulo,
       this.nuevaFecha,
       this.nuevoLugar,
-      'gratuito' // el servicio lo sobreescribe a 'pro' si eres admin
+      'gratuito', // el servicio lo sobreescribe a 'pro' si eres admin
     );
 
     this.creando = false;
@@ -94,6 +94,11 @@ async crearEvento() {
   }
 
   async onLogoSeleccionado(event: Event) {
+    if (this.miPerfil?.plan !== 'pro') {
+      this.toast.error('El logo personalizado solo está disponible en el Plan Pro.');
+      return;
+    }
+
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
 
@@ -140,6 +145,4 @@ async crearEvento() {
       this.toast.error('No se pudo eliminar el logo.');
     }
   }
-
-  
 }

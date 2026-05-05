@@ -12,8 +12,8 @@
         </a>
       }
       <button (click)="abrirBranding()" class="text-sm text-stone-600 hover:text-stone-900 transition">
-    Mi marca
-  </button>
+        Mi marca
+      </button>
       <button (click)="cerrarSesion()" class="text-sm text-stone-600 hover:text-stone-900 transition">
         Cerrar sesión
       </button>
@@ -22,6 +22,20 @@
 </header>
 
   <div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Banner plan gratuito o evento_unico -->
+    @if (miPerfil?.plan === 'gratuito') {
+      <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4">
+        <div>
+          <p class="text-sm font-medium text-amber-900">Estás en el plan gratuito</p>
+          <p class="text-xs text-amber-700 mt-0.5">Límite de 30 fotos · 7 días · Sin ZIP ni cartel</p>
+        </div>
+        <a routerLink="/precios" class="flex-shrink-0 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-amber-700 transition">
+          Mejorar plan →
+        </a>
+      </div>
+    }
+
     <div class="flex justify-between items-center mb-6">
       <p class="text-sm text-stone-600">
         @if (cargando) {
@@ -49,7 +63,17 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       @for (evento of eventos; track evento.id) {
         <a [routerLink]="['/panel/evento', evento.id]" class="bg-white rounded-2xl border border-stone-200 p-5 hover:border-stone-400 transition group block">
-          <h2 class="font-serif text-xl text-stone-900 mb-1 group-hover:text-stone-700">{{ evento.titulo }}</h2>
+          <div class="flex items-start justify-between mb-1">
+            <h2 class="font-serif text-xl text-stone-900 group-hover:text-stone-700">{{ evento.titulo }}</h2>
+            <!-- Badge del plan -->
+            @if (evento.plan === 'gratuito') {
+              <span class="text-xs bg-stone-100 text-stone-500 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">Gratis</span>
+            } @else if (evento.plan === 'evento_unico') {
+              <span class="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">Único</span>
+            } @else if (evento.plan === 'pro') {
+              <span class="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">Pro</span>
+            }
+          </div>
           <p class="text-sm text-stone-500 mb-3">{{ evento.fecha }} · {{ evento.lugar }}</p>
           <p class="text-xs text-stone-400 font-mono">/{{ evento.slug }}</p>
         </a>
@@ -89,69 +113,91 @@
       </div>
     </div>
   }
-  <!-- Modal Mi Marca -->
-@if (mostrandoBranding) {
-  <div
-    class="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-20"
-    (click)="cerrarBranding()"
-  >
-    <div
-      class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8"
-      (click)="$event.stopPropagation()"
-    >
-      <div class="flex items-start justify-between mb-2">
-        <h2 class="text-2xl font-serif text-stone-900">Tu marca</h2>
-        <button (click)="cerrarBranding()" class="text-stone-400 hover:text-stone-700 text-2xl leading-none">
-          ×
-        </button>
-      </div>
-      <p class="text-sm text-stone-500 mb-6">
-        Este logo aparecerá en las galerías de tus eventos en lugar del de Recuerda tu Día.
-      </p>
 
-      <!-- Vista previa del logo actual -->
-      <div class="flex items-center justify-center bg-stone-50 border border-stone-200 rounded-2xl py-8 mb-4">
-        @if (miPerfil?.logo_url) {
-          <img [src]="miPerfil.logo_url" alt="Tu logo" class="h-32 w-auto rounded-2xl" />
-        } @else {
-          <div class="text-center">
-            <div class="text-4xl mb-2 opacity-30">🏷️</div>
-            <p class="text-sm text-stone-500">Aún no has subido un logo</p>
+  <!-- Modal Mi Marca -->
+  @if (mostrandoBranding) {
+    <div
+      class="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-20"
+      (click)="cerrarBranding()"
+    >
+      <div
+        class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-start justify-between mb-2">
+          <h2 class="text-2xl font-serif text-stone-900">Tu marca</h2>
+          <button (click)="cerrarBranding()" class="text-stone-400 hover:text-stone-700 text-2xl leading-none">
+            ×
+          </button>
+        </div>
+        <p class="text-sm text-stone-500 mb-6">
+          Este logo aparecerá en las galerías de tus eventos en lugar del de Recuerda tu Día.
+        </p>
+
+        <!-- Aviso si no es plan Pro -->
+        @if (miPerfil?.plan !== 'pro') {
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 text-center">
+            <p class="text-sm font-medium text-amber-900">Solo disponible en Plan Pro</p>
+            <p class="text-xs text-amber-700 mt-1">Tu logo personalizado aparecerá en las galerías de tus eventos.</p>
+            <a routerLink="/precios" (click)="cerrarBranding()" class="text-xs text-amber-600 font-medium hover:underline mt-2 inline-block">
+              Ver planes →
+            </a>
           </div>
         }
-      </div>
 
-      <!-- Botones de acción -->
-      <div class="space-y-3">
-        <label
-          class="block w-full bg-stone-900 text-white py-3 rounded-xl text-sm font-medium hover:bg-stone-800 transition text-center cursor-pointer"
-          [class.opacity-50]="subiendoLogo"
-          [class.cursor-not-allowed]="subiendoLogo"
-        >
-          {{ subiendoLogo ? 'Subiendo…' : (miPerfil?.logo_url ? 'Cambiar logo' : 'Subir logo') }}
-          <input
-            type="file"
-            accept="image/*"
-            (change)="onLogoSeleccionado($event)"
-            [disabled]="subiendoLogo"
-            class="hidden"
-          />
-        </label>
+        <!-- Vista previa del logo actual -->
+        <div class="flex items-center justify-center bg-stone-50 border border-stone-200 rounded-2xl py-8 mb-4">
+          @if (miPerfil?.logo_url) {
+            <img [src]="miPerfil.logo_url" alt="Tu logo" class="h-32 w-auto rounded-2xl" />
+          } @else {
+            <div class="text-center">
+              <div class="text-4xl mb-2 opacity-30">🏷️</div>
+              <p class="text-sm text-stone-500">Aún no has subido un logo</p>
+            </div>
+          }
+        </div>
 
-        @if (miPerfil?.logo_url) {
+        <!-- Botones de acción — bloqueados si no es Pro -->
+        @if (miPerfil?.plan === 'pro') {
+          <div class="space-y-3">
+            <label
+              class="block w-full bg-stone-900 text-white py-3 rounded-xl text-sm font-medium hover:bg-stone-800 transition text-center cursor-pointer"
+              [class.opacity-50]="subiendoLogo"
+              [class.cursor-not-allowed]="subiendoLogo"
+            >
+              {{ subiendoLogo ? 'Subiendo…' : (miPerfil?.logo_url ? 'Cambiar logo' : 'Subir logo') }}
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onLogoSeleccionado($event)"
+                [disabled]="subiendoLogo"
+                class="hidden"
+              />
+            </label>
+
+            @if (miPerfil?.logo_url) {
+              <button
+                (click)="quitarLogo()"
+                class="block w-full bg-white text-stone-700 border border-stone-300 py-3 rounded-xl text-sm font-medium hover:bg-stone-50 transition"
+              >
+                Quitar logo
+              </button>
+            }
+          </div>
+        } @else {
+          <!-- Botón desactivado para no-Pro -->
           <button
-            (click)="quitarLogo()"
-            class="block w-full bg-white text-stone-700 border border-stone-300 py-3 rounded-xl text-sm font-medium hover:bg-stone-50 transition"
+            disabled
+            class="w-full bg-stone-100 text-stone-400 py-3 rounded-xl text-sm font-medium cursor-not-allowed border border-stone-200"
           >
-            Quitar logo
+            🔒 Subir logo (Plan Pro)
           </button>
         }
-      </div>
 
-      <p class="text-xs text-stone-400 mt-4 text-center">
-        Formato recomendado: PNG cuadrado, fondo transparente. Máximo 2 MB.
-      </p>
+        <p class="text-xs text-stone-400 mt-4 text-center">
+          Formato recomendado: PNG cuadrado, fondo transparente. Máximo 2 MB.
+        </p>
+      </div>
     </div>
-  </div>
-}
+  }
 </main>

@@ -46,6 +46,7 @@ export interface Perfil {
   is_admin: boolean;
   nombre: string | null;
   logo_url: string | null;
+  plan: 'gratuito' | 'evento_unico' | 'pro'; // ← AÑADIR
   creado_en: string;
 }
 
@@ -419,6 +420,9 @@ export class SupabaseService {
   /**
    * Crear un evento nuevo. Genera el slug automáticamente.
    */
+  /**
+   * Crear un evento nuevo. Genera el slug automáticamente.
+   */
   async crearEvento(
     titulo: string,
     fecha: string,
@@ -428,11 +432,21 @@ export class SupabaseService {
     const usuario = await this.getUsuarioActual();
     if (!usuario) return null;
 
-    // Verificar si es admin directamente (más fiable que getMiPerfil)
-    const esAdmin = await this.esAdmin();
-    const planFinal = esAdmin ? 'pro' : plan;
+    // Determinar plan final según perfil del usuario
+    const perfil = await this.getMiPerfil();
+    let planFinal: 'gratuito' | 'evento_unico' | 'pro';
 
-    // Calcular expiración para plan gratuito
+    if (perfil?.is_admin) {
+      planFinal = 'pro'; // admin siempre pro
+    } else if (perfil?.plan === 'pro') {
+      planFinal = 'pro'; // suscripción pro activa
+    } else if (perfil?.plan === 'evento_unico') {
+      planFinal = 'evento_unico'; // pagó evento único
+    } else {
+      planFinal = 'gratuito'; // por defecto
+    }
+
+    // Calcular expiración solo para plan gratuito
     const expiraEn =
       planFinal === 'gratuito'
         ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
