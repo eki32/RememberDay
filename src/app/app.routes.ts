@@ -19,7 +19,7 @@ export const routes: Routes = [
   },
   {
     path: 'solicitar',
-    canActivate: [guestGuard],
+    //canActivate: [guestGuard],
     loadComponent: () =>
       import('./pages/solicitar/solicitar').then((m) => m.SolicitarComponent),
   },

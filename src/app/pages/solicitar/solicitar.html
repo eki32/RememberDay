@@ -2,25 +2,21 @@
   <div class="max-w-lg w-full bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
 
     @if (enviado) {
-      <!-- Pantalla de confirmación -->
       <div class="px-6 sm:px-8 py-12 text-center">
         <div class="text-5xl mb-4">✉️</div>
-        <h1 class="text-2xl font-serif text-stone-900 mb-2">¡Solicitud recibida!</h1>
+        <h1 class="text-2xl font-serif text-stone-900 mb-2">¡Mensaje recibido!</h1>
         <p class="text-stone-600 mb-6 leading-relaxed">
-          Hemos recibido tu solicitud. Te contactaremos en menos de 24 horas para darte los detalles y crear tu cuenta.
+          Gracias por escribirme. Te responderé en menos de 24 horas.
         </p>
-        <a
-          routerLink="/"
-          class="inline-block bg-stone-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-stone-800 transition"
-        >
+        <a routerLink="/" class="inline-block bg-stone-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-stone-800 transition">
           Volver al inicio
         </a>
       </div>
     } @else {
-      <!-- Formulario -->
       <div class="px-6 sm:px-8 pt-8 pb-2 text-center">
-        <h1 class="text-2xl font-serif text-stone-900 mb-1">Solicita tu álbum</h1>
-        <p class="text-sm text-stone-500">Cuéntanos sobre tu evento y te contactamos</p>
+        <div class="text-4xl mb-3">💬</div>
+        <h1 class="text-2xl font-serif text-stone-900 mb-1">¿Tienes dudas?</h1>
+        <p class="text-sm text-stone-500">Escríbeme y te respondo en menos de 24 horas</p>
       </div>
 
       <div class="px-6 sm:px-8 py-7 space-y-4">
@@ -31,7 +27,7 @@
           <input
             type="text"
             [(ngModel)]="nombre"
-            placeholder="Tu nombre completo"
+            placeholder="Tu nombre"
             class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900"
           />
         </div>
@@ -50,50 +46,12 @@
 
         <div>
           <label class="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">
-            Teléfono
-          </label>
-          <input
-            type="tel"
-            [(ngModel)]="telefono"
-            placeholder="600 000 000"
-            class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900"
-          />
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">
-            Tipo de evento <span class="text-red-500">*</span>
-          </label>
-          <select
-            [(ngModel)]="tipoEvento"
-            class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 bg-white"
-          >
-            <option value="">Selecciona...</option>
-            @for (tipo of tiposEvento; track tipo.valor) {
-              <option [value]="tipo.valor">{{ tipo.etiqueta }}</option>
-            }
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">
-            Fecha aproximada del evento
-          </label>
-          <input
-            type="date"
-            [(ngModel)]="fechaEvento"
-            class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900"
-          />
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-stone-500 mb-1.5 uppercase tracking-wide">
-            Mensaje
+            ¿En qué puedo ayudarte? <span class="text-red-500">*</span>
           </label>
           <textarea
             [(ngModel)]="mensaje"
-            rows="3"
-            placeholder="¿Algo que debamos saber?"
+            rows="4"
+            placeholder="Cuéntame tu duda o lo que necesitas..."
             class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 resize-none"
           ></textarea>
         </div>
@@ -109,7 +67,7 @@
           [disabled]="cargando"
           class="w-full bg-stone-900 text-white py-3.5 rounded-xl font-medium hover:bg-stone-800 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ cargando ? 'Enviando…' : 'Enviar solicitud' }}
+          {{ cargando ? 'Enviando…' : 'Enviar mensaje' }}
         </button>
 
         <p class="text-center text-sm text-stone-500 pt-2">

@@ -41,6 +41,7 @@ export class AdminSolicitudesComponent implements OnInit {
     cumpleanos: 'Cumpleaños',
     empresa: 'Evento de empresa',
     comunion: 'Comunión / Bautizo',
+    contacto: '💬 Consulta',
     otro: 'Otro',
   };
 

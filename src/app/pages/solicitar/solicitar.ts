@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectorRef } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
@@ -12,32 +12,19 @@ import { SupabaseService } from '../../services/supabase';
 })
 export class SolicitarComponent {
   private supabase = inject(SupabaseService);
-  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
-  // Campos del formulario
   nombre = '';
   email = '';
-  telefono = '';
-  tipoEvento = '';
-  fechaEvento = '';
   mensaje = '';
 
   cargando = false;
   enviado = false;
   error = '';
 
-  tiposEvento = [
-    { valor: 'boda', etiqueta: 'Boda' },
-    { valor: 'cumpleanos', etiqueta: 'Cumpleaños' },
-    { valor: 'empresa', etiqueta: 'Evento de empresa' },
-    { valor: 'comunion', etiqueta: 'Comunión / Bautizo' },
-    { valor: 'otro', etiqueta: 'Otro' },
-  ];
-
   async enviar() {
-    if (!this.nombre.trim() || !this.email.trim() || !this.tipoEvento) {
-      this.error = 'Por favor, rellena los campos obligatorios.';
+    if (!this.nombre.trim() || !this.email.trim() || !this.mensaje.trim()) {
+      this.error = 'Por favor, rellena todos los campos.';
       return;
     }
 
@@ -45,13 +32,14 @@ export class SolicitarComponent {
     this.error = '';
     this.cdr.detectChanges();
 
+    // Reutilizamos la tabla solicitudes con tipo_evento = 'contacto'
     const ok = await this.supabase.crearSolicitud({
       nombre: this.nombre.trim(),
       email: this.email.trim(),
-      telefono: this.telefono.trim() || null,
-      tipo_evento: this.tipoEvento,
-      fecha_evento: this.fechaEvento || null,
-      mensaje: this.mensaje.trim() || null,
+      telefono: null,
+      tipo_evento: 'contacto',
+      fecha_evento: null,
+      mensaje: this.mensaje.trim(),
     });
 
     this.cargando = false;
@@ -59,7 +47,7 @@ export class SolicitarComponent {
     if (ok) {
       this.enviado = true;
     } else {
-      this.error = 'No se pudo enviar la solicitud. Inténtalo de nuevo.';
+      this.error = 'No se pudo enviar el mensaje. Inténtalo de nuevo.';
     }
 
     this.cdr.detectChanges();
