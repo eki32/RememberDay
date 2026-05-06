@@ -288,9 +288,6 @@ export class SupabaseService {
     return data.publicUrl;
   }
 
-  getUrlThumbnail(storagePath: string, width = 400): string {
-  return `${environment.supabaseUrl}/storage/v1/render/image/public/fotos-eventos/${storagePath}?width=${width}&height=${width}&resize=cover&quality=75`;
-}
 
   /**
    * Suscribirse a cambios de fotos en tiempo real (nuevas y borradas).
