@@ -22,7 +22,7 @@ interface FotoConUrl extends Foto {
 })
 export class GaleriaComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
-  private supabase = inject(SupabaseService);
+  supabase = inject(SupabaseService);
   private cdr = inject(ChangeDetectorRef);
   private toast = inject(ToastService);
 

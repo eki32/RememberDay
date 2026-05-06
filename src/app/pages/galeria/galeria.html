@@ -12,7 +12,6 @@
     <header class="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-stone-200">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
-          <!-- Logo del organizador (white label) o por defecto -->
           @if (logoOrganizador) {
             <img
               [src]="logoOrganizador"
@@ -37,9 +36,7 @@
           @if (nombreInvitado) {
             <span class="hidden sm:block text-sm text-stone-600">{{ nombreInvitado }}</span>
           }
-          <div
-            class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-800"
-          >
+          <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-800">
             {{ iniciales }}
           </div>
         </div>
@@ -56,9 +53,7 @@
 
     <!-- Banner límite próximo (plan gratuito) -->
     @if (eventoLimiteFotos && !eventoExpirado) {
-      <div
-        class="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800"
-      >
+      <div class="bg-amber-50 border-b border-amber-200 px-4 py-3 text-center text-sm text-amber-800">
         Este álbum está casi lleno (límite de 30 fotos del plan gratuito).
       </div>
     }
@@ -66,9 +61,7 @@
     <!-- Contenido -->
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
       <!-- Cartelito animador -->
-      <div
-        class="mb-6 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 px-5 py-4 flex items-center gap-4"
-      >
+      <div class="mb-6 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 px-5 py-4 flex items-center gap-4">
         <span class="text-3xl flex-shrink-0">📸</span>
         <div>
           <p class="font-semibold text-stone-800 text-sm sm:text-base leading-snug">
@@ -79,6 +72,7 @@
           </p>
         </div>
       </div>
+
       @if (fotos.length === 0) {
         <div class="text-center py-20">
           <div class="text-6xl mb-4 opacity-30">📷</div>
@@ -86,13 +80,13 @@
           <p class="text-stone-500 text-sm">¡Sé el primero en subir una!</p>
         </div>
       } @else {
-        <!-- Grid responsive: 3 cols en móvil, hasta 6 en escritorio -->
+        <!-- Grid responsive -->
         <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3">
           @for (foto of fotos; track foto.id) {
             <div class="aspect-square bg-stone-100 rounded-lg relative overflow-hidden group">
               @if (foto.tipo === 'foto') {
                 <img
-                  [src]="foto.url"
+                  [src]="supabase.getUrlThumbnail(foto.storage_path)"
                   [alt]="foto.nombre_invitado ?? 'Foto del evento'"
                   class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 cursor-zoom-in"
                   loading="lazy"
@@ -112,7 +106,8 @@
                   </div>
                 </div>
               }
-              <!-- Botón de borrar (solo si la subí yo y hace <5 min) -->
+
+              <!-- Botón borrar -->
               @if (puedoBorrar(foto)) {
                 <button
                   (click)="borrarFoto(foto, $event)"
@@ -127,10 +122,9 @@
                   }
                 </button>
               }
+
               @if (foto.nombre_invitado) {
-                <div
-                  class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <p class="text-white text-[10px] sm:text-xs truncate">
                     {{ foto.nombre_invitado }}
                   </p>
@@ -142,23 +136,16 @@
       }
     </div>
 
-    <!-- Botón flotante de subir (siempre visible, abajo) -->
-    <div
-      class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-stone-50 via-stone-50 to-transparent pt-12 pb-4 px-4 pointer-events-none"
-    >
+    <!-- Botón flotante subir -->
+    <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-stone-50 via-stone-50 to-transparent pt-12 pb-4 px-4 pointer-events-none">
       <div class="max-w-md mx-auto pointer-events-auto">
-        <!-- Sustituye el label del botón flotante por este -->
         @if (!eventoExpirado) {
           @if (subiendo) {
-            <div
-              class="bg-stone-900 text-white py-3 rounded-full text-center font-medium shadow-lg"
-            >
+            <div class="bg-stone-900 text-white py-3 rounded-full text-center font-medium shadow-lg">
               Subiendo {{ progresoSubida.hechas }} / {{ progresoSubida.total }}…
             </div>
           } @else {
-            <label
-              class="block bg-stone-900 text-white py-3 rounded-full font-medium hover:bg-stone-800 transition shadow-lg cursor-pointer text-center"
-            >
+            <label class="block bg-stone-900 text-white py-3 rounded-full font-medium hover:bg-stone-800 transition shadow-lg cursor-pointer text-center">
               <span class="text-xl leading-none mr-1">+</span> Subir fotos / vídeos
               <input
                 type="file"
@@ -170,9 +157,7 @@
             </label>
           }
         } @else {
-          <div
-            class="bg-stone-300 text-stone-500 py-3 rounded-full text-center font-medium shadow-lg cursor-not-allowed text-sm"
-          >
+          <div class="bg-stone-300 text-stone-500 py-3 rounded-full text-center font-medium shadow-lg cursor-not-allowed text-sm">
             Álbum expirado
           </div>
         }
@@ -189,7 +174,6 @@
     (keydown)="onLightboxKeydown($event)"
     tabindex="0"
   >
-    <!-- Botón cerrar -->
     <button
       class="absolute top-4 right-4 text-white/70 hover:text-white text-3xl leading-none z-10 w-10 h-10 flex items-center justify-center"
       (click)="cerrarLightbox()"
@@ -198,12 +182,10 @@
       ×
     </button>
 
-    <!-- Contador -->
     <span class="absolute top-5 left-1/2 -translate-x-1/2 text-white/50 text-sm">
       {{ lightboxIndex + 1 }} / {{ fotosSolo.length }}
     </span>
 
-    <!-- Flecha izquierda -->
     @if (lightboxIndex > 0) {
       <button
         class="absolute left-3 sm:left-6 bg-black/60 hover:bg-black/80 text-white text-3xl w-11 h-11 rounded-full flex items-center justify-center z-10 transition"
@@ -214,7 +196,6 @@
       </button>
     }
 
-    <!-- Imagen -->
     <img
       [src]="lightboxFoto.url"
       [alt]="lightboxFoto.nombre_invitado ?? 'Foto'"
@@ -222,7 +203,6 @@
       (click)="$event.stopPropagation()"
     />
 
-    <!-- Flecha derecha -->
     @if (lightboxIndex < fotosSolo.length - 1) {
       <button
         class="absolute right-3 sm:right-6 bg-black/60 hover:bg-black/80 text-white text-3xl w-11 h-11 rounded-full flex items-center justify-center z-10 transition"
@@ -233,7 +213,6 @@
       </button>
     }
 
-    <!-- Nombre del invitado -->
     @if (lightboxFoto.nombre_invitado) {
       <p class="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/60 text-sm">
         {{ lightboxFoto.nombre_invitado }}
