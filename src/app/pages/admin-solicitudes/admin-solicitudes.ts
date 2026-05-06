@@ -21,12 +21,10 @@ export class AdminSolicitudesComponent implements OnInit {
   cargando = true;
   filtroEstado: string = 'todos';
 
-  // Solicitud seleccionada para ver detalle
   seleccionada: Solicitud | null = null;
   notasEdit = '';
   guardandoNotas = false;
   creandoCuenta = false;
-
 
   estados: { valor: Solicitud['estado']; etiqueta: string; color: string }[] = [
     { valor: 'pendiente', etiqueta: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
@@ -34,6 +32,12 @@ export class AdminSolicitudesComponent implements OnInit {
     { valor: 'pagado', etiqueta: 'Pagado', color: 'bg-purple-100 text-purple-800' },
     { valor: 'cuenta_creada', etiqueta: 'Cuenta creada', color: 'bg-green-100 text-green-800' },
     { valor: 'rechazado', etiqueta: 'Rechazado', color: 'bg-red-100 text-red-800' },
+  ];
+
+  estadosContacto = [
+    { valor: 'pendiente' as Solicitud['estado'], etiqueta: 'Nuevo', color: 'bg-blue-100 text-blue-800' },
+    { valor: 'contactado' as Solicitud['estado'], etiqueta: 'Respondido', color: 'bg-green-100 text-green-800' },
+    { valor: 'rechazado' as Solicitud['estado'], etiqueta: 'Archivado', color: 'bg-stone-100 text-stone-600' },
   ];
 
   tiposEvento: Record<string, string> = {
@@ -72,12 +76,31 @@ export class AdminSolicitudesComponent implements OnInit {
     return conteo;
   }
 
-  estiloEstado(valor: string): string {
-    return this.estados.find((e) => e.valor === valor)?.color ?? 'bg-stone-100 text-stone-800';
+  get estadosParaMostrar() {
+    if (this.seleccionada?.tipo_evento === 'contacto') {
+      return this.estadosContacto;
+    }
+    return this.estados;
   }
 
-  etiquetaEstado(valor: string): string {
-    return this.estados.find((e) => e.valor === valor)?.etiqueta ?? valor;
+  estiloEstado(solicitud: Solicitud): string {
+    if (solicitud.tipo_evento === 'contacto') {
+      const estado = this.estadosContacto.find((e) => e.valor === solicitud.estado);
+      return estado?.color ?? 'bg-stone-100 text-stone-600';
+    }
+    return this.estados.find((e) => e.valor === solicitud.estado)?.color ?? 'bg-stone-100 text-stone-800';
+  }
+
+  etiquetaEstado(solicitud: Solicitud): string {
+    if (solicitud.tipo_evento === 'contacto') {
+      const etiquetas: Record<string, string> = {
+        pendiente: 'Nuevo',
+        contactado: 'Respondido',
+        rechazado: 'Archivado',
+      };
+      return etiquetas[solicitud.estado] ?? solicitud.estado;
+    }
+    return this.estados.find((e) => e.valor === solicitud.estado)?.etiqueta ?? solicitud.estado;
   }
 
   etiquetaTipoEvento(valor: string): string {
@@ -104,7 +127,6 @@ export class AdminSolicitudesComponent implements OnInit {
 
     if (ok) {
       this.seleccionada.estado = nuevoEstado;
-      // Actualizar también en la lista
       const idx = this.solicitudes.findIndex((s) => s.id === this.seleccionada!.id);
       if (idx !== -1) this.solicitudes[idx].estado = nuevoEstado;
       this.cdr.detectChanges();
@@ -128,6 +150,7 @@ export class AdminSolicitudesComponent implements OnInit {
       this.seleccionada.notas_admin = this.notasEdit;
       const idx = this.solicitudes.findIndex((s) => s.id === this.seleccionada!.id);
       if (idx !== -1) this.solicitudes[idx].notas_admin = this.notasEdit;
+      this.toast.exito('Notas guardadas.');
     } else {
       this.toast.error('No se pudieron guardar las notas.');
     }
@@ -139,7 +162,6 @@ export class AdminSolicitudesComponent implements OnInit {
   async crearCuenta() {
     if (!this.seleccionada) return;
 
-    // Confirmación antes de crear (es una acción importante)
     const confirmado = confirm(
       `¿Crear cuenta para ${this.seleccionada.nombre}?\n\n` +
       `Se generará una contraseña automática y se enviará por email a:\n` +
@@ -157,14 +179,12 @@ export class AdminSolicitudesComponent implements OnInit {
     this.creandoCuenta = false;
 
     if (resultado.ok) {
-      // Actualizar el estado en pantalla a 'cuenta_creada'
       this.seleccionada.estado = 'cuenta_creada';
       const idx = this.solicitudes.findIndex(
         (s) => s.id === this.seleccionada!.id
       );
       if (idx !== -1) this.solicitudes[idx].estado = 'cuenta_creada';
       this.cdr.detectChanges();
-
       this.toast.exito('Cuenta creada y email enviado al cliente.');
     } else {
       this.toast.error(resultado.error ?? 'No se pudo crear la cuenta.');

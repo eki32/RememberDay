@@ -3,16 +3,13 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
       <div>
         <p class="text-xs uppercase tracking-widest text-stone-400">Recuerda tu Día · Admin</p>
-        <h1 class="text-xl font-serif text-stone-900">Solicitudes</h1>
+        <h1 class="text-xl font-serif text-stone-900">Consultas</h1>
       </div>
       <div class="flex items-center gap-4">
         <a routerLink="/panel" class="text-sm text-stone-600 hover:text-stone-900 transition">
           Mi panel
         </a>
-        <button
-          (click)="cerrarSesion()"
-          class="text-sm text-stone-600 hover:text-stone-900 transition"
-        >
+        <button (click)="cerrarSesion()" class="text-sm text-stone-600 hover:text-stone-900 transition">
           Cerrar sesión
         </button>
       </div>
@@ -20,6 +17,7 @@
   </header>
 
   <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
     <!-- Filtros -->
     <div class="flex flex-wrap gap-2 mb-6">
       <button
@@ -32,7 +30,7 @@
       >
         Todas ({{ contadorPorEstado['todos'] }})
       </button>
-      @for (estado of estados; track estado.valor) {
+      @for (estado of estadosContacto; track estado.valor) {
         <button
           (click)="filtroEstado = estado.valor"
           [class.bg-stone-900]="filtroEstado === estado.valor"
@@ -51,17 +49,16 @@
     } @else if (solicitudesFiltradas.length === 0) {
       <div class="text-center py-20 bg-white rounded-2xl border border-stone-200">
         <div class="text-5xl mb-4 opacity-30">📭</div>
-        <p class="text-stone-700 font-medium mb-1">No hay solicitudes</p>
+        <p class="text-stone-700 font-medium mb-1">No hay consultas</p>
         <p class="text-stone-500 text-sm">
           @if (filtroEstado !== 'todos') {
             Prueba a cambiar el filtro.
           } @else {
-            Cuando alguien envíe el formulario, aparecerá aquí.
+            Cuando alguien envíe una consulta, aparecerá aquí.
           }
         </p>
       </div>
     } @else {
-      <!-- Lista de solicitudes -->
       <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
         <div class="divide-y divide-stone-200">
           @for (solicitud of solicitudesFiltradas; track solicitud.id) {
@@ -72,22 +69,12 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-3 mb-1">
                   <p class="font-medium text-stone-900 truncate">{{ solicitud.nombre }}</p>
-                  <span
-                    [class]="
-                      'text-xs px-2 py-0.5 rounded-full font-medium ' +
-                      estiloEstado(solicitud.estado)
-                    "
-                  >
-                    {{ etiquetaEstado(solicitud.estado) }}
+                  <span [class]="'text-xs px-2 py-0.5 rounded-full font-medium ' + estiloEstado(solicitud)">
+                    {{ etiquetaEstado(solicitud) }}
                   </span>
                 </div>
                 <p class="text-sm text-stone-500 truncate">
-                  @if (solicitud.tipo_evento === 'contacto') {
-                    <span class="text-blue-600 font-medium">💬 Consulta</span>
-                  } @else {
-                    {{ etiquetaTipoEvento(solicitud.tipo_evento) }}
-                  }
-                  · {{ solicitud.email }}
+                  💬 Consulta · {{ solicitud.email }}
                 </p>
               </div>
               <div class="text-right text-xs text-stone-400 shrink-0">
@@ -110,50 +97,25 @@
         class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 my-auto"
         (click)="$event.stopPropagation()"
       >
+        <!-- Header modal -->
         <div class="flex items-start justify-between mb-4">
           <div>
             <h2 class="text-2xl font-serif text-stone-900">{{ seleccionada.nombre }}</h2>
-            <p class="text-sm text-stone-500">
-              {{ formatearFechaCompleta(seleccionada.creado_en) }}
-            </p>
+            <p class="text-sm text-stone-500">{{ formatearFechaCompleta(seleccionada.creado_en) }}</p>
           </div>
-          <button
-            (click)="cerrarDetalle()"
-            class="text-stone-400 hover:text-stone-700 text-2xl leading-none"
-          >
+          <button (click)="cerrarDetalle()" class="text-stone-400 hover:text-stone-700 text-2xl leading-none">
             ×
           </button>
         </div>
 
-        <!-- Datos del cliente -->
+        <!-- Datos -->
         <div class="space-y-3 mb-6 text-sm">
           <div class="flex">
             <span class="text-stone-500 w-32 shrink-0">Email:</span>
-            <a
-              [href]="'mailto:' + seleccionada.email"
-              class="text-stone-900 hover:underline break-all"
-            >
+            <a [href]="'mailto:' + seleccionada.email" class="text-stone-900 hover:underline break-all">
               {{ seleccionada.email }}
             </a>
           </div>
-          @if (seleccionada.telefono) {
-            <div class="flex">
-              <span class="text-stone-500 w-32 shrink-0">Teléfono:</span>
-              <a [href]="'tel:' + seleccionada.telefono" class="text-stone-900 hover:underline">
-                {{ seleccionada.telefono }}
-              </a>
-            </div>
-          }
-          <div class="flex">
-            <span class="text-stone-500 w-32 shrink-0">Tipo evento:</span>
-            <span class="text-stone-900">{{ etiquetaTipoEvento(seleccionada.tipo_evento) }}</span>
-          </div>
-          @if (seleccionada.fecha_evento) {
-            <div class="flex">
-              <span class="text-stone-500 w-32 shrink-0">Fecha evento:</span>
-              <span class="text-stone-900">{{ formatearFecha(seleccionada.fecha_evento) }}</span>
-            </div>
-          }
           @if (seleccionada.mensaje) {
             <div>
               <span class="text-stone-500 block mb-1">Mensaje:</span>
@@ -164,58 +126,25 @@
           }
         </div>
 
-        @if (seleccionada.tipo_evento === 'contacto') {
-          <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <p class="text-sm font-medium text-blue-900 mb-2">💬 Consulta recibida</p>
-            <a
-              [href]="
-                'mailto:' +
-                seleccionada.email +
-                '?subject=Re: Tu consulta en Recuerda tu Día&body=Hola ' +
-                seleccionada.nombre +
-                ',%0D%0A%0D%0AGracias por escribirnos.%0D%0A%0D%0A'
-              "
-              class="block w-full text-center bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
-            >
-              ✉️ Responder por email
-            </a>
-          </div>
-        }
-
-        <!-- Crear cuenta de cliente -->
-        @if (seleccionada.tipo_evento !== 'contacto') {
-          @if (seleccionada.estado !== 'cuenta_creada') {
-            <div class="mb-6 p-4 bg-stone-50 border border-stone-200 rounded-xl">
-              <h3 class="text-sm font-medium text-stone-900 mb-1">Crear cuenta de cliente</h3>
-              <p class="text-xs text-stone-500 mb-3">
-                Se generará una contraseña aleatoria y se enviará a
-                <strong>{{ seleccionada.email }}</strong> con el enlace de acceso.
-              </p>
-              <button
-                (click)="crearCuenta()"
-                [disabled]="creandoCuenta"
-                class="w-full bg-stone-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-stone-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {{ creandoCuenta ? 'Creando cuenta…' : '✨ Crear cuenta y enviar credenciales' }}
-              </button>
-            </div>
-          } @else {
-            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-center">
-              <p class="text-sm font-medium text-green-900">✅ Cuenta creada</p>
-              <p class="text-xs text-green-700 mt-1">
-                El cliente ya recibió sus credenciales por email.
-              </p>
-            </div>
-          }
-        }
-
-        <!-- Cambiar estado -->
-        <div class="mb-6">
-          <label class="block text-xs font-medium text-stone-500 mb-2 uppercase tracking-wide"
-            >Estado</label
+        <!-- Botón responder -->
+        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <a
+            [href]="'https://mail.google.com/mail/?view=cm&to=' + seleccionada.email + '&su=Re: Tu consulta en Recuerda tu Día&body=Hola ' + seleccionada.nombre + ',%0A%0A'"
+target="_blank"
+rel="noopener"
+            class="block w-full text-center bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
           >
+            ✉️ Responder por email
+          </a>
+        </div>
+
+        <!-- Estado de la consulta -->
+        <div class="mb-6">
+          <label class="block text-xs font-medium text-stone-500 mb-2 uppercase tracking-wide">
+            Estado de la consulta
+          </label>
           <div class="flex flex-wrap gap-2">
-            @for (estado of estados; track estado.valor) {
+            @for (estado of estadosContacto; track estado.valor) {
               <button
                 (click)="cambiarEstado(estado.valor)"
                 [class.ring-2]="seleccionada.estado === estado.valor"
@@ -228,15 +157,15 @@
           </div>
         </div>
 
-        <!-- Notas del admin -->
+        <!-- Notas -->
         <div class="mb-4">
           <label class="block text-xs font-medium text-stone-500 mb-2 uppercase tracking-wide">
-            Notas internas
+            Notas
           </label>
           <textarea
             [(ngModel)]="notasEdit"
             rows="3"
-            placeholder="Anotaciones privadas sobre este cliente..."
+            placeholder="Anota tu respuesta o cualquier detalle relevante..."
             class="w-full px-4 py-3 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 resize-none text-sm"
           ></textarea>
           <button
